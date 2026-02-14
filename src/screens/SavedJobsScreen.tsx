@@ -3,12 +3,22 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
+import { CommonActions } from '@react-navigation/native';
 
 type SavedJobsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SavedJobs'>;
 };
 
 const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
+  const navigateToJobFinder = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'JobFinder' }],
+      })
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -16,7 +26,7 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('JobFinder')}>
+          onPress={navigateToJobFinder}>
           <Text style={styles.buttonText}>Go to Job Finder</Text>
         </TouchableOpacity>
       </View>
@@ -42,7 +52,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#6366F1',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,

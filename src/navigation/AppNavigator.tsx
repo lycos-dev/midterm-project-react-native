@@ -11,7 +11,12 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const AppNavigator = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="JobFinder">
+      <Stack.Navigator 
+        initialRouteName="JobFinder"
+        screenOptions={{
+          animation: 'slide_from_right',
+        }}
+      >
         <Stack.Screen
           name="JobFinder"
           component={JobFinderScreen}
