@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TextInput,
   FlatList,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +31,7 @@ interface Job {
 const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +41,10 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  useEffect(() => {
+    filterJobs();
+  }, [searchQuery, jobs]);
 
   const fetchJobs = async () => {
     try {
@@ -82,11 +87,25 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
       });
       
       setJobs(transformedJobs);
+      setFilteredJobs(transformedJobs);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterJobs = () => {
+    if (!searchQuery.trim()) {
+      setFilteredJobs(jobs);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = jobs.filter((job) =>
+      job.title.toLowerCase().includes(query)
+    );
+    setFilteredJobs(filtered);
   };
 
   const handleSaveJob = (job: Job) => {
@@ -96,8 +115,8 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleApply = (jobId: string, jobTitle: string) => {
-    console.log(`Apply pressed - ID: ${jobId}, Title: ${jobTitle}`);
+  const handleApply = () => {
+    navigation.navigate('ApplicationForm', { fromScreen: 'JobFinder' });
   };
 
   const navigateToSavedJobs = () => {
@@ -113,7 +132,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
-        routes: [{ name: 'ApplicationForm' }],
+        routes: [{ name: 'ApplicationForm', params: { fromScreen: 'JobFinder' } }],
       })
     );
   };
@@ -134,10 +153,14 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
         </View>
 
         <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[
+          <Pressable
+            style={({ pressed }) => [
               styles.actionButton,
-              { backgroundColor: isSaved ? colors.success : colors.inputBackground, borderColor: colors.border },
+              { 
+                backgroundColor: isSaved ? colors.success : colors.inputBackground, 
+                borderColor: colors.border,
+                opacity: pressed ? 0.7 : 1,
+              },
               !isSaved && styles.saveButton,
             ]}
             onPress={() => handleSaveJob(item)}
@@ -145,13 +168,16 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
             <Text style={[styles.saveButtonText, { color: isSaved ? '#fff' : colors.text }]}>
               {isSaved ? '✓ Saved' : 'Save Job'}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.primary }]}
-            onPress={() => handleApply(item.id, item.title)}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 },
+            ]}
+            onPress={handleApply}>
             <Text style={styles.applyButtonText}>Apply</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     );
@@ -171,28 +197,40 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
       return (
         <View style={styles.centerContainer}>
           <Text style={[styles.errorText, { color: colors.error }]}>❌ {error}</Text>
-          <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.primary }]} onPress={fetchJobs}>
+          <Pressable 
+            style={({ pressed }) => [
+              styles.retryButton,
+              { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 },
+            ]}
+            onPress={fetchJobs}>
             <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       );
     }
 
-    if (jobs.length === 0) {
+    if (filteredJobs.length === 0) {
       return (
         <View style={styles.centerContainer}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No jobs found</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            {searchQuery ? 'No jobs found matching your search' : 'No jobs available'}
+          </Text>
         </View>
       );
     }
 
     return (
       <FlatList
-        data={jobs}
+        data={filteredJobs}
         renderItem={renderJobItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        windowSize={10}
       />
     );
   };
@@ -203,7 +241,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
         <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <TextInput
             style={[styles.searchInput, { backgroundColor: colors.inputBackground, color: colors.text }]}
-            placeholder="Search jobs..."
+            placeholder="Search jobs by title..."
             placeholderTextColor={colors.placeholder}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -213,17 +251,23 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
         {renderContent()}
 
         <View style={[styles.navigationButtons, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-          <TouchableOpacity
-            style={[styles.navButton, { backgroundColor: colors.primaryLight }]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.navButton,
+              { backgroundColor: colors.primaryLight, opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={navigateToSavedJobs}>
             <Text style={styles.navButtonText}>Go to Saved Jobs</Text>
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity
-            style={[styles.navButton, { backgroundColor: colors.primaryLight }]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.navButton,
+              { backgroundColor: colors.primaryLight, opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={navigateToApplicationForm}>
             <Text style={styles.navButtonText}>Go to Application Form</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>

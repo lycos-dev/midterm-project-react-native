@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -43,6 +43,10 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
     console.log(`Job removed - ID: ${jobId}, Title: ${jobTitle}`);
   };
 
+  const handleApply = () => {
+    navigation.navigate('ApplicationForm', { fromScreen: 'SavedJobs' });
+  };
+
   const renderJobItem = ({ item }: { item: Job }) => (
     <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.jobHeader}>
@@ -55,11 +59,25 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
         <Text style={[styles.jobLocation, { color: colors.textSecondary }]}>{item.location}</Text>
       </View>
 
-      <TouchableOpacity
-        style={[styles.removeButton, { backgroundColor: colors.errorLight, borderColor: colors.error }]}
-        onPress={() => handleRemoveJob(item.id, item.title)}>
-        <Text style={[styles.removeButtonText, { color: colors.error }]}>Remove</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionButton,
+            { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 },
+          ]}
+          onPress={handleApply}>
+          <Text style={styles.applyButtonText}>Apply</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.removeButton,
+            { backgroundColor: colors.errorLight, borderColor: colors.error, opacity: pressed ? 0.7 : 1 },
+          ]}
+          onPress={() => handleRemoveJob(item.id, item.title)}>
+          <Text style={[styles.removeButtonText, { color: colors.error }]}>Remove</Text>
+        </Pressable>
+      </View>
     </View>
   );
 
@@ -70,11 +88,14 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
       <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
         Jobs you save will appear here
       </Text>
-      <TouchableOpacity
-        style={[styles.browseButton, { backgroundColor: colors.primary }]}
+      <Pressable
+        style={({ pressed }) => [
+          styles.browseButton,
+          { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 },
+        ]}
         onPress={navigateToJobFinder}>
         <Text style={styles.browseButtonText}>Browse Jobs</Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 
@@ -98,16 +119,24 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={10}
+              updateCellsBatchingPeriod={50}
+              initialNumToRender={10}
+              windowSize={10}
             />
           </>
         )}
 
         <View style={[styles.navigationButtons, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-          <TouchableOpacity
-            style={[styles.navButton, { backgroundColor: colors.primaryLight }]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.navButton,
+              { backgroundColor: colors.primaryLight, opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={navigateToJobFinder}>
             <Text style={styles.navButtonText}>Go to Job Finder</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>
@@ -173,7 +202,24 @@ const styles = StyleSheet.create({
   jobLocation: {
     fontSize: 14,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+  },
   removeButton: {
+    flex: 1,
     height: 44,
     borderRadius: 8,
     justifyContent: 'center',

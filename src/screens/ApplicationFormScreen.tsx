@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
@@ -12,16 +12,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import { CommonActions } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 
 type ApplicationFormScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ApplicationForm'>;
+  route: RouteProp<RootStackParamList, 'ApplicationForm'>;
 };
 
 const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   navigation,
+  route,
 }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -39,6 +42,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   const whyHireYouInputRef = useRef<TextInput>(null);
 
   const { colors } = useTheme();
+  const fromScreen = route.params?.fromScreen || 'JobFinder';
 
   const navigateToJobFinder = () => {
     navigation.dispatch(
@@ -52,6 +56,13 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const validateContactNumber = (contact: string): boolean => {
+    // Remove all non-digit characters
+    const digitsOnly = contact.replace(/\D/g, '');
+    // Check if it has at least 10 digits
+    return digitsOnly.length >= 10;
   };
 
   const validateForm = (): boolean => {
@@ -78,7 +89,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
     if (!contactNumber.trim()) {
       setContactError('Contact number is required');
       isValid = false;
-    } else if (contactNumber.trim().length < 10) {
+    } else if (!validateContactNumber(contactNumber)) {
       setContactError('Contact number must be at least 10 digits');
       isValid = false;
     }
@@ -112,6 +123,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
       console.log('Email:', email);
       console.log('Contact Number:', contactNumber);
       console.log('Why Hire You:', whyHireYou);
+      console.log('Submitted from:', fromScreen);
 
       Alert.alert(
         'Application Submitted! ✅',
@@ -121,6 +133,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
             text: 'OK',
             onPress: () => {
               clearForm();
+              // Always redirect to Job Finder after submission
               navigateToJobFinder();
             },
           },
@@ -277,20 +290,24 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: colors.primary }]}
-            onPress={handleSubmit}
-            activeOpacity={0.8}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.submitButton,
+              { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 },
+            ]}
+            onPress={handleSubmit}>
             <Text style={styles.submitButtonText}>Submit Application</Text>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Navigation Button */}
-          <TouchableOpacity
-            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={navigateToJobFinder}
-            activeOpacity={0.7}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.backButton,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+            ]}
+            onPress={navigateToJobFinder}>
             <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Back to Job Finder</Text>
-          </TouchableOpacity>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

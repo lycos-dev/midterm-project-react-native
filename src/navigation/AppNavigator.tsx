@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
@@ -27,11 +27,16 @@ const AppNavigator = () => {
             fontWeight: '700',
           },
           headerRight: () => (
-            <TouchableOpacity onPress={toggleTheme} style={styles.themeButton}>
+            <Pressable 
+              onPress={toggleTheme} 
+              style={({ pressed }) => [
+                styles.themeButton,
+                { opacity: pressed ? 0.5 : 1 },
+              ]}>
               <Text style={[styles.themeIcon, { color: colors.text }]}>
                 {theme === 'light' ? '🌙' : '☀️'}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ),
         }}>
         <Stack.Screen
