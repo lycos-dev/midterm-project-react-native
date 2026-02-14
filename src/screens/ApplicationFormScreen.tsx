@@ -41,7 +41,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   const contactInputRef = useRef<TextInput>(null);
   const whyHireYouInputRef = useRef<TextInput>(null);
 
-  const { colors } = useTheme();
+  const { colors, theme, toggleTheme } = useTheme();
   const fromScreen = route.params?.fromScreen || 'JobFinder';
 
   const navigateToJobFinder = () => {
@@ -154,7 +154,32 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      {/* CUSTOM NAVIGATION BAR */}
+      <View style={[styles.navbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <View style={styles.navLeft}>
+          <Pressable
+            onPress={navigateToJobFinder}
+            style={({ pressed }) => [
+              styles.backButton,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 }
+            ]}>
+            <Text style={[styles.backButtonText, { color: colors.text }]}>← Back</Text>
+          </Pressable>
+          <Text style={[styles.navTitle, { color: colors.text }]}>Application Form</Text>
+        </View>
+        <Pressable
+          onPress={toggleTheme}
+          style={({ pressed }) => [
+            styles.themeButton,
+            { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 }
+          ]}>
+          <Text style={[styles.themeButtonText, { color: colors.surface }]}>
+            {theme === 'light' ? 'L' : 'D'}
+          </Text>
+        </Pressable>
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
@@ -332,6 +357,47 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  // NAVIGATION BAR
+  navbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  navLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  navTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+  },
+  backButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  backButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  themeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   keyboardAvoidingView: {
     flex: 1,

@@ -36,7 +36,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
   const [error, setError] = useState<string | null>(null);
 
   const { saveJob, isJobSaved } = useSavedJobs();
-  const { colors } = useTheme();
+  const { colors, theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     fetchJobs();
@@ -119,6 +119,15 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     navigation.navigate('ApplicationForm', { fromScreen: 'JobFinder' });
   };
 
+  const navigateToSavedJobs = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'SavedJobs' }],
+      })
+    );
+  };
+
   const renderJobItem = ({ item }: { item: Job }) => {
     const isSaved = isJobSaved(item.id);
 
@@ -130,8 +139,8 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
             <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
           </View>
           {isSaved && (
-            <View style={[styles.savedBadge, { backgroundColor: colors.accent + '20' }]}>
-              <Text style={[styles.savedBadgeText, { color: colors.text }]}>✓</Text>
+            <View style={[styles.savedBadge, { backgroundColor: colors.muted }]}>
+              <Text style={[styles.savedBadgeText, { color: colors.surface }]}>✓</Text>
             </View>
           )}
         </View>
@@ -236,7 +245,34 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      {/* CUSTOM NAVIGATION BAR */}
+      <View style={[styles.navbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.navTitle, { color: colors.text }]}>Job Finder</Text>
+        <View style={styles.navActions}>
+          <Pressable
+            onPress={navigateToSavedJobs}
+            style={({ pressed }) => [
+              styles.navButton,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 }
+            ]}>
+            <Text style={[styles.navButtonText, { color: colors.text }]}>Saved</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={toggleTheme}
+            style={({ pressed }) => [
+              styles.themeButton,
+              { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 }
+            ]}>
+            <Text style={[styles.themeButtonText, { color: colors.surface }]}>
+              {theme === 'light' ? 'L' : 'D'}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* SEARCH BAR */}
       <View style={[styles.searchBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TextInput
           style={[styles.searchInput, { 
@@ -253,6 +289,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
           {filteredJobs.length} {filteredJobs.length === 1 ? 'result' : 'results'}
         </Text>
       </View>
+
       {renderContent()}
     </SafeAreaView>
   );
@@ -262,6 +299,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  // NAVIGATION BAR
+  navbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  navTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+  },
+  navActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  navButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  navButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  themeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  // SEARCH BAR
   searchBar: {
     padding: 16,
     borderBottomWidth: 1,

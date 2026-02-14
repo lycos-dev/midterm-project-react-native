@@ -27,7 +27,7 @@ interface Job {
 
 const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   const { savedJobs, unsaveJob } = useSavedJobs();
-  const { colors } = useTheme();
+  const { colors, theme, toggleTheme } = useTheme();
 
   const navigateToJobFinder = () => {
     navigation.dispatch(
@@ -54,8 +54,8 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
           <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
           <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
         </View>
-        <View style={[styles.savedBadge, { backgroundColor: colors.accent + '20' }]}>
-          <Text style={[styles.savedBadgeText, { color: colors.text }]}>✓</Text>
+        <View style={[styles.savedBadge, { backgroundColor: colors.muted }]}>
+          <Text style={[styles.savedBadgeText, { color: colors.surface }]}>✓</Text>
         </View>
       </View>
       
@@ -117,14 +117,40 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        {savedJobs.length > 0 && (
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      {/* CUSTOM NAVIGATION BAR */}
+      <View style={[styles.navbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <View style={styles.navLeft}>
+          <Pressable
+            onPress={navigateToJobFinder}
+            style={({ pressed }) => [
+              styles.backButton,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 }
+            ]}>
+            <Text style={[styles.backButtonText, { color: colors.text }]}>← Back</Text>
+          </Pressable>
+          <Text style={[styles.navTitle, { color: colors.text }]}>Saved Jobs</Text>
+        </View>
+        <Pressable
+          onPress={toggleTheme}
+          style={({ pressed }) => [
+            styles.themeButton,
+            { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 }
+          ]}>
+          <Text style={[styles.themeButtonText, { color: colors.surface }]}>
+            {theme === 'light' ? 'L' : 'D'}
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* SUBTITLE */}
+      {savedJobs.length > 0 && (
+        <View style={[styles.subtitle, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.subtitleText, { color: colors.textSecondary }]}>
             {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'} saved
           </Text>
-        )}
-      </View>
+        </View>
+      )}
       
       {savedJobs.length === 0 ? (
         renderEmptyState()
@@ -150,13 +176,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  // NAVIGATION BAR
+  navbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
   },
+  navLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  navTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+  },
+  backButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  backButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  themeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  // SUBTITLE
   subtitle: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  subtitleText: {
     fontSize: 13,
     letterSpacing: 0.2,
   },
