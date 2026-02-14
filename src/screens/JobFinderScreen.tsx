@@ -7,6 +7,7 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -35,7 +36,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { saveJob, isJobSaved } = useSavedJobs();
+  const { saveJob, isJobSaved, savedJobs } = useSavedJobs();
   const { colors, theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -110,8 +111,20 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
 
   const handleSaveJob = (job: Job) => {
     if (!isJobSaved(job.id)) {
-      saveJob(job);
-      console.log(`Job saved - ID: ${job.id}, Title: ${job.title}`);
+      Alert.alert(
+        'Save Job',
+        `Do you want to save "${job.title}" at ${job.company}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Save',
+            onPress: () => {
+              saveJob(job);
+              console.log(`Job saved - ID: ${job.id}, Title: ${job.title}`);
+            },
+          },
+        ]
+      );
     }
   };
 
@@ -139,8 +152,10 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
             <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
           </View>
           {isSaved && (
-            <View style={[styles.savedBadge, { backgroundColor: colors.muted }]}>
-              <Text style={[styles.savedBadgeText, { color: colors.surface }]}>✓</Text>
+            <View style={[styles.savedBadge, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+              <View style={[styles.savedCheckmark, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.savedCheckText, { color: colors.text }]}>✓</Text>
+              </View>
             </View>
           )}
         </View>
@@ -249,27 +264,23 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
       {/* CUSTOM NAVIGATION BAR */}
       <View style={[styles.navbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Text style={[styles.navTitle, { color: colors.text }]}>Job Finder</Text>
-        <View style={styles.navActions}>
-          <Pressable
-            onPress={navigateToSavedJobs}
-            style={({ pressed }) => [
-              styles.navButton,
-              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 }
-            ]}>
-            <Text style={[styles.navButtonText, { color: colors.text }]}>Saved</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={toggleTheme}
-            style={({ pressed }) => [
-              styles.themeButton,
-              { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 }
-            ]}>
-            <Text style={[styles.themeButtonText, { color: colors.surface }]}>
-              {theme === 'light' ? 'L' : 'D'}
-            </Text>
-          </Pressable>
-        </View>
+        
+        {/* Theme Toggle Switch */}
+        <Pressable onPress={toggleTheme} style={styles.themeSwitch}>
+          <View style={[styles.themeSwitchTrack, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
+            <View style={[
+              styles.themeSwitchThumb,
+              { 
+                backgroundColor: colors.text,
+                transform: [{ translateX: theme === 'dark' ? 22 : 0 }]
+              }
+            ]} />
+            <View style={styles.themeSwitchLabels}>
+              <Text style={[styles.themeSwitchLabel, { color: theme === 'light' ? colors.surface : colors.textSecondary }]}>L</Text>
+              <Text style={[styles.themeSwitchLabel, { color: theme === 'dark' ? colors.surface : colors.textSecondary }]}>D</Text>
+            </View>
+          </View>
+        </Pressable>
       </View>
 
       {/* SEARCH BAR */}
@@ -291,6 +302,28 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
       </View>
 
       {renderContent()}
+
+      {/* BOTTOM SAVED JOBS BUTTON */}
+      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+        <Pressable
+          onPress={navigateToSavedJobs}
+          style={({ pressed }) => [
+            styles.savedJobsButton,
+            { 
+              backgroundColor: colors.primary,
+              opacity: pressed ? 0.6 : 1,
+            }
+          ]}>
+          <Text style={[styles.savedJobsButtonText, { color: colors.surface }]}>
+            Saved Jobs
+          </Text>
+          {savedJobs.length > 0 && (
+            <View style={[styles.counter, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.counterText, { color: colors.primary }]}>{savedJobs.length}</Text>
+            </View>
+          )}
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 };
@@ -305,7 +338,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
   },
   navTitle: {
@@ -313,30 +346,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: -0.3,
   },
-  navActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  // THEME SWITCH
+  themeSwitch: {
+    padding: 4,
   },
-  navButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
+  themeSwitchTrack: {
+    width: 60,
+    height: 32,
+    borderRadius: 16,
+    padding: 3,
     borderWidth: 1,
+    position: 'relative',
   },
-  navButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+  themeSwitchThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    position: 'absolute',
+    top: 2,
+    left: 2,
   },
-  themeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    justifyContent: 'center',
+  themeSwitchLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 8,
+    height: '100%',
   },
-  themeButtonText: {
-    fontSize: 14,
+  themeSwitchLabel: {
+    fontSize: 11,
     fontWeight: '700',
   },
   // SEARCH BAR
@@ -396,6 +434,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    paddingBottom: 100,
   },
   jobCard: {
     borderRadius: 8,
@@ -425,15 +464,23 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   savedBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+  },
+  savedCheckmark: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  savedBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
+  savedCheckText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   divider: {
     height: 1,
@@ -481,6 +528,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.3,
     textTransform: 'uppercase',
+  },
+  // BOTTOM BAR
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    borderTopWidth: 1,
+  },
+  savedJobsButton: {
+    height: 50,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+  savedJobsButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  counter: {
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  counterText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 
