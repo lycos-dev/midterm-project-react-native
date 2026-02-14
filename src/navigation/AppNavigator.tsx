@@ -19,7 +19,7 @@ const AppNavigator = () => {
       <Stack.Navigator
         initialRouteName="JobFinder"
         screenOptions={{
-          animation: 'slide_from_right',
+          animation: 'fade',
           headerStyle: {
             backgroundColor: colors.surface,
           },
@@ -30,6 +30,7 @@ const AppNavigator = () => {
             letterSpacing: -0.3,
           },
           headerShadowVisible: false,
+          headerBackVisible: false,
           headerBackTitleVisible: false,
         }}>
         <Stack.Screen
@@ -37,6 +38,7 @@ const AppNavigator = () => {
           component={JobFinderScreen}
           options={({ navigation }) => ({
             title: 'Job Finder',
+            headerLeft: () => null,
             headerRight: () => (
               <View style={styles.headerRight}>
                 <Pressable
@@ -48,30 +50,40 @@ const AppNavigator = () => {
                       })
                     );
                   }}
-                  style={({ pressed }) => [
+                  style={[
                     styles.headerButton,
-                    { 
-                      borderColor: colors.border,
-                      opacity: pressed ? 0.5 : 1,
-                    },
+                    { borderColor: colors.border },
                   ]}>
-                  <Text style={[styles.headerButtonText, { color: colors.text }]}>
-                    ▢ Saved Jobs
-                  </Text>
+                  {({ pressed }) => (
+                    <Text style={[styles.headerButtonText, { 
+                      color: colors.text,
+                      opacity: pressed ? 0.5 : 1,
+                    }]}>
+                      ▢ Saved Jobs
+                    </Text>
+                  )}
                 </Pressable>
 
                 <Pressable
                   onPress={toggleTheme}
-                  style={({ pressed }) => [
+                  style={[
                     styles.themeButton,
-                    { 
-                      backgroundColor: colors.primary,
-                      opacity: pressed ? 0.5 : 1,
-                    },
+                    { backgroundColor: colors.surface, borderColor: colors.border },
                   ]}>
-                  <Text style={[styles.themeIcon, { color: colors.surface }]}>
-                    {theme === 'light' ? '◐' : '◑'}
-                  </Text>
+                  {({ pressed }) => (
+                    <View style={[styles.themeContent, { opacity: pressed ? 0.5 : 1 }]}>
+                      <View style={[
+                        styles.themeIndicator,
+                        { 
+                          backgroundColor: theme === 'light' ? colors.text : colors.text,
+                          transform: [{ translateX: theme === 'light' ? 0 : 12 }],
+                        },
+                      ]} />
+                      <Text style={[styles.themeLabel, { color: colors.textSecondary }]}>
+                        {theme === 'light' ? 'L' : 'D'}
+                      </Text>
+                    </View>
+                  )}
                 </Pressable>
               </View>
             ),
@@ -92,28 +104,38 @@ const AppNavigator = () => {
                     })
                   );
                 }}
-                style={({ pressed }) => [
-                  styles.backButton,
-                  { opacity: pressed ? 0.5 : 1 },
-                ]}>
-                <Text style={[styles.backButtonText, { color: colors.text }]}>
-                  ← Back
-                </Text>
+                style={styles.backButtonContainer}>
+                {({ pressed }) => (
+                  <Text style={[styles.backButtonText, { 
+                    color: colors.text,
+                    opacity: pressed ? 0.5 : 1,
+                  }]}>
+                    ← Back
+                  </Text>
+                )}
               </Pressable>
             ),
             headerRight: () => (
               <Pressable
                 onPress={toggleTheme}
-                style={({ pressed }) => [
+                style={[
                   styles.themeButton,
-                  { 
-                    backgroundColor: colors.primary,
-                    opacity: pressed ? 0.5 : 1,
-                  },
+                  { backgroundColor: colors.surface, borderColor: colors.border },
                 ]}>
-                <Text style={[styles.themeIcon, { color: colors.surface }]}>
-                  {theme === 'light' ? '◐' : '◑'}
-                </Text>
+                {({ pressed }) => (
+                  <View style={[styles.themeContent, { opacity: pressed ? 0.5 : 1 }]}>
+                    <View style={[
+                      styles.themeIndicator,
+                      { 
+                        backgroundColor: theme === 'light' ? colors.text : colors.text,
+                        transform: [{ translateX: theme === 'light' ? 0 : 12 }],
+                      },
+                    ]} />
+                    <Text style={[styles.themeLabel, { color: colors.textSecondary }]}>
+                      {theme === 'light' ? 'L' : 'D'}
+                    </Text>
+                  </View>
+                )}
               </Pressable>
             ),
           })}
@@ -133,28 +155,38 @@ const AppNavigator = () => {
                     })
                   );
                 }}
-                style={({ pressed }) => [
-                  styles.backButton,
-                  { opacity: pressed ? 0.5 : 1 },
-                ]}>
-                <Text style={[styles.backButtonText, { color: colors.text }]}>
-                  Back
-                </Text>
+                style={styles.backButtonContainer}>
+                {({ pressed }) => (
+                  <Text style={[styles.backButtonText, { 
+                    color: colors.text,
+                    opacity: pressed ? 0.5 : 1,
+                  }]}>
+                    Back
+                  </Text>
+                )}
               </Pressable>
             ),
             headerRight: () => (
               <Pressable
                 onPress={toggleTheme}
-                style={({ pressed }) => [
+                style={[
                   styles.themeButton,
-                  { 
-                    backgroundColor: colors.primary,
-                    opacity: pressed ? 0.5 : 1,
-                  },
+                  { backgroundColor: colors.surface, borderColor: colors.border },
                 ]}>
-                <Text style={[styles.themeIcon, { color: colors.surface }]}>
-                  {theme === 'light' ? '◐' : '◑'}
-                </Text>
+                {({ pressed }) => (
+                  <View style={[styles.themeContent, { opacity: pressed ? 0.5 : 1 }]}>
+                    <View style={[
+                      styles.themeIndicator,
+                      { 
+                        backgroundColor: theme === 'light' ? colors.text : colors.text,
+                        transform: [{ translateX: theme === 'light' ? 0 : 12 }],
+                      },
+                    ]} />
+                    <Text style={[styles.themeLabel, { color: colors.textSecondary }]}>
+                      {theme === 'light' ? 'L' : 'D'}
+                    </Text>
+                  </View>
+                )}
               </Pressable>
             ),
           })}
@@ -182,18 +214,35 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   themeButton: {
-    width: 32,
+    width: 56,
     height: 32,
     borderRadius: 6,
+    borderWidth: 1,
     justifyContent: 'center',
+    paddingHorizontal: 4,
+    position: 'relative',
+  },
+  themeContent: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    position: 'relative',
   },
-  themeIcon: {
-    fontSize: 18,
+  themeIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    position: 'absolute',
+    left: 0,
+  },
+  themeLabel: {
+    fontSize: 11,
     fontWeight: '600',
+    position: 'absolute',
+    right: 6,
   },
-  backButton: {
-    paddingRight: 8,
+  backButtonContainer: {
+    paddingRight: 12,
   },
   backButtonText: {
     fontSize: 16,

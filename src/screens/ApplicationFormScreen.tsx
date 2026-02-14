@@ -298,7 +298,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
                 multiline
                 numberOfLines={6}
                 textAlignVertical="top"
-                onFocus={() => scrollToInput(350)}
+                onFocus={() => scrollToInput(450)}
               />
               <Text style={[styles.charCount, { color: colors.textSecondary }]}>
                 {whyHireYou.length}/20 minimum

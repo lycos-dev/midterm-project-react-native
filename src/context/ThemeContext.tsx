@@ -18,6 +18,7 @@ interface ThemeColors {
   inputBackground: string;
   placeholder: string;
   accent: string;
+  muted: string; // Added for gray "Saved" button
 }
 
 interface ThemeContextType {
@@ -42,6 +43,7 @@ const lightTheme: ThemeColors = {
   inputBackground: '#F8F9FA',
   placeholder: '#ADB5BD',
   accent: '#495057',
+  muted: '#868E96', // Gray for saved button
 };
 
 const darkTheme: ThemeColors = {
@@ -60,6 +62,7 @@ const darkTheme: ThemeColors = {
   inputBackground: '#2A2A2A',
   placeholder: '#666666',
   accent: '#CCCCCC',
+  muted: '#6C757D', // Gray for saved button
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

@@ -155,7 +155,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
               styles.button,
               styles.secondaryButton,
               { 
-                backgroundColor: isSaved ? colors.primary : colors.surface,
+                backgroundColor: isSaved ? colors.muted : colors.surface,
                 borderColor: colors.border,
                 opacity: pressed ? 0.6 : 1,
               },
