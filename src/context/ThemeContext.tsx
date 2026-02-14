@@ -17,6 +17,7 @@ interface ThemeColors {
   shadow: string;
   inputBackground: string;
   placeholder: string;
+  accent: string;
 }
 
 interface ThemeContextType {
@@ -26,37 +27,39 @@ interface ThemeContextType {
 }
 
 const lightTheme: ThemeColors = {
-  background: '#F5F7FA',
-  surface: '#FFFFFF',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
   card: '#FFFFFF',
-  text: '#1F2937',
-  textSecondary: '#6B7280',
-  primary: '#3B82F6',
-  primaryLight: '#6366F1',
-  success: '#10B981',
-  error: '#DC2626',
-  errorLight: '#FEE2E2',
-  border: '#E5E7EB',
+  text: '#000000',
+  textSecondary: '#6C757D',
+  primary: '#000000',
+  primaryLight: '#343A40',
+  success: '#000000',
+  error: '#000000',
+  errorLight: '#F8F9FA',
+  border: '#DEE2E6',
   shadow: '#000000',
-  inputBackground: '#F5F7FA',
-  placeholder: '#9CA3AF',
+  inputBackground: '#F8F9FA',
+  placeholder: '#ADB5BD',
+  accent: '#495057',
 };
 
 const darkTheme: ThemeColors = {
-  background: '#0A0E27', // Deep navy
-  surface: '#131842', // Navy blue
-  card: '#1A1F4D', // Lighter navy
+  background: '#000000',
+  surface: '#1A1A1A',
+  card: '#1A1A1A',
   text: '#FFFFFF',
-  textSecondary: '#B4B8D4',
-  primary: '#5B8DEF', // Bright blue
-  primaryLight: '#7C3AED', // Purple accent
-  success: '#34D399',
-  error: '#F87171',
-  errorLight: '#7F1D1D',
-  border: '#2A2F5A',
+  textSecondary: '#A0A0A0',
+  primary: '#FFFFFF',
+  primaryLight: '#E0E0E0',
+  success: '#FFFFFF',
+  error: '#FFFFFF',
+  errorLight: '#2A2A2A',
+  border: '#333333',
   shadow: '#000000',
-  inputBackground: '#1A1F4D',
-  placeholder: '#6B7095',
+  inputBackground: '#2A2A2A',
+  placeholder: '#666666',
+  accent: '#CCCCCC',
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
