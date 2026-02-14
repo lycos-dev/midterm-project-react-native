@@ -72,31 +72,31 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
     setWhyHireYouError('');
 
     if (!name.trim()) {
-      setNameError('Name is required');
+      setNameError('Required');
       isValid = false;
     }
 
     if (!email.trim()) {
-      setEmailError('Email is required');
+      setEmailError('Required');
       isValid = false;
     } else if (!validateEmail(email)) {
-      setEmailError('Invalid email format');
+      setEmailError('Invalid format');
       isValid = false;
     }
 
     if (!contactNumber.trim()) {
-      setContactError('Contact number is required');
+      setContactError('Required');
       isValid = false;
     } else if (!validateContactNumber(contactNumber)) {
-      setContactError('Minimum 10 digits required');
+      setContactError('Minimum 10 digits');
       isValid = false;
     }
 
     if (!whyHireYou.trim()) {
-      setWhyHireYouError('This field is required');
+      setWhyHireYouError('Required');
       isValid = false;
     } else if (whyHireYou.trim().length < 20) {
-      setWhyHireYouError('Minimum 20 characters required');
+      setWhyHireYouError('Minimum 20 characters');
       isValid = false;
     }
 
@@ -159,19 +159,6 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
-        
-        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.backButton,
-              { opacity: pressed ? 0.5 : 1 },
-            ]}
-            onPress={navigateToJobFinder}>
-            <Text style={[styles.backText, { color: colors.text }]}>← Back</Text>
-          </Pressable>
-          
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Application Form</Text>
-        </View>
 
         <ScrollView
           ref={scrollViewRef}
@@ -180,130 +167,143 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Name <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.surface, 
-                  color: colors.text, 
-                  borderColor: nameError ? colors.text : colors.border 
-                },
-              ]}
-              placeholder="Full name"
-              placeholderTextColor={colors.placeholder}
-              value={name}
-              onChangeText={(text) => {
-                setName(text);
-                if (nameError) setNameError('');
-              }}
-              autoCapitalize="words"
-              returnKeyType="next"
-              onSubmitEditing={() => emailInputRef.current?.focus()}
-              onFocus={() => scrollToInput(0)}
-            />
-            {nameError ? (
-              <Text style={[styles.errorText, { color: colors.text }]}>{nameError}</Text>
-            ) : null}
+          <View style={styles.formSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal Information</Text>
+            
+            <View style={styles.formGroup}>
+              <View style={styles.labelRow}>
+                <Text style={[styles.label, { color: colors.text }]}>Full Name</Text>
+                {nameError ? (
+                  <Text style={[styles.errorInline, { color: colors.text }]}>{nameError}</Text>
+                ) : null}
+              </View>
+              <TextInput
+                style={[
+                  styles.input,
+                  { 
+                    backgroundColor: colors.surface, 
+                    color: colors.text, 
+                    borderColor: nameError ? colors.text : colors.border 
+                  },
+                ]}
+                placeholder="John Doe"
+                placeholderTextColor={colors.placeholder}
+                value={name}
+                onChangeText={(text) => {
+                  setName(text);
+                  if (nameError) setNameError('');
+                }}
+                autoCapitalize="words"
+                returnKeyType="next"
+                onSubmitEditing={() => emailInputRef.current?.focus()}
+                onFocus={() => scrollToInput(0)}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <View style={styles.labelRow}>
+                <Text style={[styles.label, { color: colors.text }]}>Email Address</Text>
+                {emailError ? (
+                  <Text style={[styles.errorInline, { color: colors.text }]}>{emailError}</Text>
+                ) : null}
+              </View>
+              <TextInput
+                ref={emailInputRef}
+                style={[
+                  styles.input,
+                  { 
+                    backgroundColor: colors.surface, 
+                    color: colors.text, 
+                    borderColor: emailError ? colors.text : colors.border 
+                  },
+                ]}
+                placeholder="john@example.com"
+                placeholderTextColor={colors.placeholder}
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (emailError) setEmailError('');
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => contactInputRef.current?.focus()}
+                onFocus={() => scrollToInput(100)}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <View style={styles.labelRow}>
+                <Text style={[styles.label, { color: colors.text }]}>Contact Number</Text>
+                {contactError ? (
+                  <Text style={[styles.errorInline, { color: colors.text }]}>{contactError}</Text>
+                ) : null}
+              </View>
+              <TextInput
+                ref={contactInputRef}
+                style={[
+                  styles.input,
+                  { 
+                    backgroundColor: colors.surface, 
+                    color: colors.text, 
+                    borderColor: contactError ? colors.text : colors.border 
+                  },
+                ]}
+                placeholder="+1 (555) 000-0000"
+                placeholderTextColor={colors.placeholder}
+                value={contactNumber}
+                onChangeText={(text) => {
+                  setContactNumber(text);
+                  if (contactError) setContactError('');
+                }}
+                keyboardType="phone-pad"
+                returnKeyType="next"
+                onSubmitEditing={() => whyHireYouInputRef.current?.focus()}
+                onFocus={() => scrollToInput(200)}
+              />
+            </View>
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Email <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              ref={emailInputRef}
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.surface, 
-                  color: colors.text, 
-                  borderColor: emailError ? colors.text : colors.border 
-                },
-              ]}
-              placeholder="email@example.com"
-              placeholderTextColor={colors.placeholder}
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (emailError) setEmailError('');
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="next"
-              onSubmitEditing={() => contactInputRef.current?.focus()}
-              onFocus={() => scrollToInput(100)}
-            />
-            {emailError ? (
-              <Text style={[styles.errorText, { color: colors.text }]}>{emailError}</Text>
-            ) : null}
-          </View>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Contact Number <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              ref={contactInputRef}
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.surface, 
-                  color: colors.text, 
-                  borderColor: contactError ? colors.text : colors.border 
-                },
-              ]}
-              placeholder="Phone number"
-              placeholderTextColor={colors.placeholder}
-              value={contactNumber}
-              onChangeText={(text) => {
-                setContactNumber(text);
-                if (contactError) setContactError('');
-              }}
-              keyboardType="phone-pad"
-              returnKeyType="next"
-              onSubmitEditing={() => whyHireYouInputRef.current?.focus()}
-              onFocus={() => scrollToInput(200)}
-            />
-            {contactError ? (
-              <Text style={[styles.errorText, { color: colors.text }]}>{contactError}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Why should we hire you? <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              ref={whyHireYouInputRef}
-              style={[
-                styles.input,
-                styles.textArea,
-                { 
-                  backgroundColor: colors.surface, 
-                  color: colors.text, 
-                  borderColor: whyHireYouError ? colors.text : colors.border 
-                },
-              ]}
-              placeholder="Tell us about yourself (minimum 20 characters)"
-              placeholderTextColor={colors.placeholder}
-              value={whyHireYou}
-              onChangeText={(text) => {
-                setWhyHireYou(text);
-                if (whyHireYouError) setWhyHireYouError('');
-              }}
-              multiline
-              numberOfLines={6}
-              textAlignVertical="top"
-              onFocus={() => scrollToInput(300)}
-            />
-            {whyHireYouError ? (
-              <Text style={[styles.errorText, { color: colors.text }]}>{whyHireYouError}</Text>
-            ) : null}
+          <View style={styles.formSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Application Details</Text>
+            
+            <View style={styles.formGroup}>
+              <View style={styles.labelRow}>
+                <Text style={[styles.label, { color: colors.text }]}>Why should we hire you?</Text>
+                {whyHireYouError ? (
+                  <Text style={[styles.errorInline, { color: colors.text }]}>{whyHireYouError}</Text>
+                ) : null}
+              </View>
+              <TextInput
+                ref={whyHireYouInputRef}
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  { 
+                    backgroundColor: colors.surface, 
+                    color: colors.text, 
+                    borderColor: whyHireYouError ? colors.text : colors.border 
+                  },
+                ]}
+                placeholder="Tell us about your skills and experience..."
+                placeholderTextColor={colors.placeholder}
+                value={whyHireYou}
+                onChangeText={(text) => {
+                  setWhyHireYou(text);
+                  if (whyHireYouError) setWhyHireYouError('');
+                }}
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+                onFocus={() => scrollToInput(350)}
+              />
+              <Text style={[styles.charCount, { color: colors.textSecondary }]}>
+                {whyHireYou.length}/20 minimum
+              </Text>
+            </View>
           </View>
 
           <Pressable
@@ -312,7 +312,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 },
             ]}
             onPress={handleSubmit}>
-            <Text style={[styles.submitButtonText, { color: colors.surface }]}>Submit</Text>
+            <Text style={[styles.submitButtonText, { color: colors.surface }]}>Submit Application</Text>
           </Pressable>
 
           <Pressable
@@ -336,23 +336,6 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
   },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    marginBottom: 12,
-    alignSelf: 'flex-start',
-  },
-  backText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '600',
-    letterSpacing: -0.5,
-  },
   scrollView: {
     flex: 1,
   },
@@ -360,34 +343,54 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
+  formSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 16,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
   formGroup: {
     marginBottom: 20,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   label: {
     fontSize: 14,
     fontWeight: '500',
-    marginBottom: 8,
   },
-  required: {
-    fontWeight: '600',
+  errorInline: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   input: {
     borderRadius: 8,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 15,
     borderWidth: 1,
   },
   textArea: {
     height: 120,
-    paddingTop: 12,
+    paddingTop: 14,
   },
-  errorText: {
+  charCount: {
     fontSize: 12,
     marginTop: 6,
   },
+  divider: {
+    height: 1,
+    marginVertical: 8,
+  },
   submitButton: {
-    height: 48,
+    height: 50,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
@@ -395,11 +398,12 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 15,
-    fontWeight: '500',
-    letterSpacing: 0.2,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   cancelButton: {
-    height: 48,
+    height: 50,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',

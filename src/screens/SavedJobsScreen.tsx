@@ -49,13 +49,26 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 
   const renderJobItem = ({ item }: { item: Job }) => (
     <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={styles.jobContent}>
-        <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
-        <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
-        
-        <View style={styles.jobDetails}>
-          <Text style={[styles.jobDetail, { color: colors.textSecondary }]}>{item.salary}</Text>
-          <Text style={[styles.jobDetail, { color: colors.textSecondary }]}>{item.location}</Text>
+      <View style={styles.cardHeader}>
+        <View style={styles.jobContent}>
+          <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
+          <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
+        </View>
+        <View style={[styles.savedBadge, { backgroundColor: colors.accent + '20' }]}>
+          <Text style={[styles.savedBadgeText, { color: colors.text }]}>✓</Text>
+        </View>
+      </View>
+      
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+      
+      <View style={styles.jobDetails}>
+        <View style={styles.detailRow}>
+          <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Salary</Text>
+          <Text style={[styles.detailValue, { color: colors.text }]}>{item.salary}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Location</Text>
+          <Text style={[styles.detailValue, { color: colors.text }]}>{item.location}</Text>
         </View>
       </View>
 
@@ -63,7 +76,7 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            styles.applyButton,
+            styles.primaryButton,
             { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 },
           ]}
           onPress={handleApply}>
@@ -73,7 +86,7 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            styles.removeButton,
+            styles.secondaryButton,
             { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
           ]}
           onPress={() => handleRemoveJob(item.id, item.title)}>
@@ -85,8 +98,12 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-        No saved jobs yet
+      <View style={[styles.emptyIcon, { borderColor: colors.border }]}>
+        <Text style={[styles.emptyIconText, { color: colors.textSecondary }]}>▢</Text>
+      </View>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No Saved Jobs</Text>
+      <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
+        Jobs you save will appear here
       </Text>
       <Pressable
         style={({ pressed }) => [
@@ -99,31 +116,15 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
     </View>
   );
 
-  const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-      <Pressable
-        style={({ pressed }) => [
-          styles.backButton,
-          { opacity: pressed ? 0.5 : 1 },
-        ]}
-        onPress={navigateToJobFinder}>
-        <Text style={[styles.backText, { color: colors.text }]}>← Back</Text>
-      </Pressable>
-      
-      <View style={styles.headerContent}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Saved Jobs</Text>
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         {savedJobs.length > 0 && (
-          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-            {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'}
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'} saved
           </Text>
         )}
       </View>
-    </View>
-  );
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
-      {renderHeader()}
       
       {savedJobs.length === 0 ? (
         renderEmptyState()
@@ -150,28 +151,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
     borderBottomWidth: 1,
   },
-  backButton: {
-    marginBottom: 16,
-    alignSelf: 'flex-start',
-  },
-  backText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  headerContent: {
-    marginBottom: 4,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '600',
-    letterSpacing: -0.5,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 14,
+  subtitle: {
+    fontSize: 13,
+    letterSpacing: 0.2,
   },
   listContent: {
     padding: 16,
@@ -179,48 +166,87 @@ const styles = StyleSheet.create({
   jobCard: {
     borderRadius: 8,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     borderWidth: 1,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
   jobContent: {
-    marginBottom: 16,
+    flex: 1,
+    paddingRight: 12,
   },
   jobTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
     marginBottom: 4,
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
+    lineHeight: 22,
   },
   jobCompany: {
-    fontSize: 15,
+    fontSize: 14,
+    letterSpacing: 0.1,
+  },
+  savedBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  savedBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
     marginBottom: 12,
   },
   jobDetails: {
-    gap: 4,
+    gap: 8,
+    marginBottom: 16,
   },
-  jobDetail: {
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  detailLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  detailValue: {
     fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   button: {
     flex: 1,
-    height: 40,
+    height: 42,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  applyButton: {
+  primaryButton: {
   },
-  removeButton: {
+  secondaryButton: {
     borderWidth: 1,
   },
   buttonText: {
     fontSize: 14,
-    fontWeight: '500',
-    letterSpacing: 0.2,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   emptyContainer: {
     flex: 1,
@@ -228,9 +254,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 40,
   },
-  emptyText: {
-    fontSize: 15,
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  emptyIconText: {
+    fontSize: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 14,
+    marginBottom: 32,
+    textAlign: 'center',
   },
   browseButton: {
     paddingVertical: 12,

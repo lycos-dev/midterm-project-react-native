@@ -119,27 +119,33 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     navigation.navigate('ApplicationForm', { fromScreen: 'JobFinder' });
   };
 
-  const navigateToSavedJobs = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'SavedJobs' }],
-      })
-    );
-  };
-
   const renderJobItem = ({ item }: { item: Job }) => {
     const isSaved = isJobSaved(item.id);
 
     return (
       <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.jobContent}>
-          <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
-          <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
-          
-          <View style={styles.jobDetails}>
-            <Text style={[styles.jobDetail, { color: colors.textSecondary }]}>{item.salary}</Text>
-            <Text style={[styles.jobDetail, { color: colors.textSecondary }]}>{item.location}</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.jobContent}>
+            <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
+            <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
+          </View>
+          {isSaved && (
+            <View style={[styles.savedBadge, { backgroundColor: colors.accent + '20' }]}>
+              <Text style={[styles.savedBadgeText, { color: colors.text }]}>✓</Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
+        
+        <View style={styles.jobDetails}>
+          <View style={styles.detailRow}>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Salary</Text>
+            <Text style={[styles.detailValue, { color: colors.text }]}>{item.salary}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Location</Text>
+            <Text style={[styles.detailValue, { color: colors.text }]}>{item.location}</Text>
           </View>
         </View>
 
@@ -147,7 +153,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
           <Pressable
             style={({ pressed }) => [
               styles.button,
-              styles.saveButton,
+              styles.secondaryButton,
               { 
                 backgroundColor: isSaved ? colors.primary : colors.surface,
                 borderColor: colors.border,
@@ -164,7 +170,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
           <Pressable
             style={({ pressed }) => [
               styles.button,
-              styles.applyButton,
+              styles.primaryButton,
               { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 },
             ]}
             onPress={handleApply}>
@@ -175,45 +181,12 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     );
   };
 
-  const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-      <View style={styles.headerTop}>
-        <View>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Job Finder</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-            {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
-          </Text>
-        </View>
-        <Pressable
-          style={({ pressed }) => [
-            styles.savedButton,
-            { borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
-          ]}
-          onPress={navigateToSavedJobs}>
-          <Text style={[styles.savedButtonText, { color: colors.text }]}>Saved</Text>
-        </Pressable>
-      </View>
-      
-      <TextInput
-        style={[styles.searchInput, { 
-          backgroundColor: colors.inputBackground, 
-          color: colors.text,
-          borderColor: colors.border,
-        }]}
-        placeholder="Search jobs..."
-        placeholderTextColor={colors.placeholder}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-    </View>
-  );
-
   const renderContent = () => {
     if (loading) {
       return (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading jobs...</Text>
+          <Text style={[styles.statusText, { color: colors.textSecondary }]}>Loading jobs...</Text>
         </View>
       );
     }
@@ -221,7 +194,8 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     if (error) {
       return (
         <View style={styles.centerContainer}>
-          <Text style={[styles.errorText, { color: colors.text }]}>Error: {error}</Text>
+          <Text style={[styles.errorTitle, { color: colors.text }]}>Error Loading Jobs</Text>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>{error}</Text>
           <Pressable 
             style={({ pressed }) => [
               styles.retryButton,
@@ -237,8 +211,9 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     if (filteredJobs.length === 0) {
       return (
         <View style={styles.centerContainer}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            {searchQuery ? 'No jobs found' : 'No jobs available'}
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Jobs Found</Text>
+          <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
+            {searchQuery ? `No results for "${searchQuery}"` : 'No jobs available at the moment'}
           </Text>
         </View>
       );
@@ -262,7 +237,22 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
-      {renderHeader()}
+      <View style={[styles.searchBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TextInput
+          style={[styles.searchInput, { 
+            backgroundColor: colors.inputBackground, 
+            color: colors.text,
+            borderColor: colors.border,
+          }]}
+          placeholder="Search by job title..."
+          placeholderTextColor={colors.placeholder}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
+          {filteredJobs.length} {filteredJobs.length === 1 ? 'result' : 'results'}
+        </Text>
+      </View>
       {renderContent()}
     </SafeAreaView>
   );
@@ -272,34 +262,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  searchBar: {
     padding: 16,
     borderBottomWidth: 1,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '600',
-    letterSpacing: -0.5,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  savedButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  savedButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
   },
   searchInput: {
     height: 44,
@@ -307,21 +272,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 15,
     borderWidth: 1,
+    marginBottom: 8,
+  },
+  resultCount: {
+    fontSize: 13,
+    letterSpacing: 0.2,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 32,
   },
-  loadingText: {
-    marginTop: 12,
+  statusText: {
+    marginTop: 16,
     fontSize: 15,
   },
-  errorText: {
-    fontSize: 15,
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   retryButton: {
     paddingVertical: 12,
@@ -332,8 +307,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  emptyText: {
-    fontSize: 15,
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 14,
     textAlign: 'center',
   },
   listContent: {
@@ -342,48 +322,87 @@ const styles = StyleSheet.create({
   jobCard: {
     borderRadius: 8,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     borderWidth: 1,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
   jobContent: {
-    marginBottom: 16,
+    flex: 1,
+    paddingRight: 12,
   },
   jobTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
     marginBottom: 4,
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
+    lineHeight: 22,
   },
   jobCompany: {
-    fontSize: 15,
+    fontSize: 14,
+    letterSpacing: 0.1,
+  },
+  savedBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  savedBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
     marginBottom: 12,
   },
   jobDetails: {
-    gap: 4,
+    gap: 8,
+    marginBottom: 16,
   },
-  jobDetail: {
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  detailLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  detailValue: {
     fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   button: {
     flex: 1,
-    height: 40,
+    height: 42,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  saveButton: {
+  secondaryButton: {
     borderWidth: 1,
   },
-  applyButton: {
+  primaryButton: {
   },
   buttonText: {
     fontSize: 14,
-    fontWeight: '500',
-    letterSpacing: 0.2,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
 });
 
