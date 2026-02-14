@@ -49,33 +49,45 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 
   const renderJobItem = ({ item }: { item: Job }) => (
     <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={styles.savedBadge}>
+        <Text style={styles.savedBadgeText}>💾 SAVED</Text>
+      </View>
+      
       <View style={styles.jobHeader}>
         <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
         <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
       </View>
       
-      <View style={styles.jobDetails}>
-        <Text style={[styles.jobSalary, { color: colors.success }]}>{item.salary}</Text>
-        <Text style={[styles.jobLocation, { color: colors.textSecondary }]}>{item.location}</Text>
+      <View style={styles.jobInfo}>
+        <View style={styles.infoRow}>
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>💰 Salary:</Text>
+          <Text style={[styles.jobSalary, { color: colors.success }]}>{item.salary}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>📍 Location:</Text>
+          <Text style={[styles.jobLocation, { color: colors.textSecondary }]}>{item.location}</Text>
+        </View>
       </View>
 
       <View style={styles.buttonRow}>
         <Pressable
           style={({ pressed }) => [
             styles.actionButton,
+            styles.applyButton,
             { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 },
           ]}
           onPress={handleApply}>
-          <Text style={styles.applyButtonText}>Apply</Text>
+          <Text style={[styles.buttonText, { color: '#fff' }]}>📝 Apply Now</Text>
         </Pressable>
 
         <Pressable
           style={({ pressed }) => [
+            styles.actionButton,
             styles.removeButton,
             { backgroundColor: colors.errorLight, borderColor: colors.error, opacity: pressed ? 0.7 : 1 },
           ]}
           onPress={() => handleRemoveJob(item.id, item.title)}>
-          <Text style={[styles.removeButtonText, { color: colors.error }]}>Remove</Text>
+          <Text style={[styles.buttonText, { color: colors.error }]}>🗑️ Remove</Text>
         </Pressable>
       </View>
     </View>
@@ -83,10 +95,10 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📋</Text>
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>No Saved Jobs</Text>
+      <Text style={styles.emptyEmoji}>📂</Text>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No Saved Jobs Yet</Text>
       <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-        Jobs you save will appear here
+        Start exploring jobs and save the ones you like!
       </Text>
       <Pressable
         style={({ pressed }) => [
@@ -94,51 +106,60 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
           { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 },
         ]}
         onPress={navigateToJobFinder}>
-        <Text style={styles.browseButtonText}>Browse Jobs</Text>
+        <Text style={styles.browseButtonText}>🔍 Browse Jobs</Text>
       </Pressable>
+    </View>
+  );
+
+  const renderHeader = () => (
+    <View style={[styles.headerContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.backButton,
+          { opacity: pressed ? 0.5 : 1 },
+        ]}
+        onPress={navigateToJobFinder}>
+        <Text style={[styles.backIcon, { color: colors.primary }]}>←</Text>
+        <Text style={[styles.backText, { color: colors.primary }]}>Back to Job Finder</Text>
+      </Pressable>
+      
+      <View style={styles.headerContent}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>💾 My Saved Jobs</Text>
+        {savedJobs.length > 0 && (
+          <View style={[styles.countBadge, { backgroundColor: colors.success }]}>
+            <Text style={styles.countText}>{savedJobs.length}</Text>
+          </View>
+        )}
+      </View>
+      
+      {savedJobs.length > 0 && (
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+          You have {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'} saved
+        </Text>
+      )}
     </View>
   );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
-      <View style={styles.content}>
-        {savedJobs.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          <>
-            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>Saved Jobs</Text>
-              <Text style={[styles.headerCount, { color: colors.textSecondary }]}>
-                {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'}
-              </Text>
-            </View>
-
-            <FlatList
-              data={savedJobs}
-              renderItem={renderJobItem}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-              removeClippedSubviews={true}
-              maxToRenderPerBatch={10}
-              updateCellsBatchingPeriod={50}
-              initialNumToRender={10}
-              windowSize={10}
-            />
-          </>
-        )}
-
-        <View style={[styles.navigationButtons, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.navButton,
-              { backgroundColor: colors.primaryLight, opacity: pressed ? 0.7 : 1 },
-            ]}
-            onPress={navigateToJobFinder}>
-            <Text style={styles.navButtonText}>Go to Job Finder</Text>
-          </Pressable>
-        </View>
-      </View>
+      {renderHeader()}
+      
+      {savedJobs.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <FlatList
+          data={savedJobs}
+          renderItem={renderJobItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          initialNumToRender={10}
+          windowSize={10}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -147,60 +168,120 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    flex: 1,
-  },
-  header: {
-    padding: 16,
+  headerContainer: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 20,
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    alignSelf: 'flex-start',
+  },
+  backIcon: {
+    fontSize: 24,
+    marginRight: 8,
     fontWeight: '700',
   },
-  headerCount: {
-    fontSize: 14,
+  backText: {
+    fontSize: 16,
     fontWeight: '600',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginRight: 12,
+  },
+  countBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  countText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   listContent: {
     padding: 16,
   },
   jobCard: {
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
     borderWidth: 1,
+    position: 'relative',
+  },
+  savedBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  savedBadgeText: {
+    color: '#10B981',
+    fontSize: 10,
+    fontWeight: '700',
   },
   jobHeader: {
-    marginBottom: 12,
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+    paddingRight: 80,
   },
   jobTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   jobCompany: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '500',
   },
-  jobDetails: {
+  jobInfo: {
     marginBottom: 16,
   },
-  jobSalary: {
-    fontSize: 16,
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoLabel: {
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 4,
+    marginRight: 8,
+    minWidth: 100,
+  },
+  jobSalary: {
+    fontSize: 15,
+    fontWeight: '700',
+    flex: 1,
   },
   jobLocation: {
     fontSize: 14,
+    flex: 1,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -208,27 +289,24 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    height: 44,
-    borderRadius: 8,
+    height: 48,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  applyButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
+  applyButton: {
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   removeButton: {
-    flex: 1,
-    height: 44,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
   },
-  removeButtonText: {
+  buttonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   emptyContainer: {
     flex: 1,
@@ -236,44 +314,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 40,
   },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 15,
-    textAlign: 'center',
+  emptyEmoji: {
+    fontSize: 80,
     marginBottom: 24,
   },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
   browseButton: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 8,
+    borderRadius: 12,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   browseButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  navigationButtons: {
-    padding: 16,
-    borderTopWidth: 1,
-  },
-  navButton: {
-    height: 44,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  navButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
   },
 });
 
