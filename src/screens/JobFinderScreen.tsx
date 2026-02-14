@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,16 +7,16 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { CommonActions } from '@react-navigation/native';
-import uuid from 'react-native-uuid';
-import { useSavedJobs } from '../context/SavedJobsContext';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/types";
+import { CommonActions } from "@react-navigation/native";
+import uuid from "react-native-uuid";
+import { useSavedJobs } from "../context/SavedJobsContext";
 
 type JobFinderScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'JobFinder'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, "JobFinder">;
 };
 
 interface Job {
@@ -28,7 +28,7 @@ interface Job {
 }
 
 const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,18 +43,18 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch('https://empllo.com/api/v1');
-      
+
+      const response = await fetch("https://empllo.com/api/v1");
+
       if (!response.ok) {
-        throw new Error('Failed to fetch jobs');
+        throw new Error("Failed to fetch jobs");
       }
-      
+
       const data = await response.json();
-      
+
       // Check if data has a jobs array or similar structure
       let jobsArray = [];
-      
+
       if (Array.isArray(data)) {
         jobsArray = data;
       } else if (data.jobs && Array.isArray(data.jobs)) {
@@ -65,19 +65,44 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
         // If it's an object with job listings as properties
         jobsArray = Object.values(data);
       }
-      
-      // Transform API data and assign unique IDs
-      const transformedJobs: Job[] = jobsArray.map((job: any) => ({
-        id: uuid.v4() as string,
-        title: job.title || job.job_title || job.position || 'No Title',
-        company: job.company || job.company_name || job.employer || 'Unknown Company',
-        salary: job.salary || job.salary_range || job.pay || 'Salary not specified',
-        location: job.location || job.city || job.address || 'Location not specified',
-      }));
-      
+
+      // Transform API data and assign stable IDs based on job content
+      const transformedJobs: Job[] = jobsArray.map(
+        (job: any, index: number) => {
+          const title =
+            job.title || job.job_title || job.position || "No Title";
+          const company =
+            job.company ||
+            job.company_name ||
+            job.employer ||
+            "Unknown Company";
+
+          // Create stable ID based on job content + index
+          const stableId = `${company}-${title}-${index}`
+            .replace(/\s+/g, "-")
+            .toLowerCase();
+
+          return {
+            id: stableId,
+            title: title,
+            company: company,
+            salary:
+              job.salary ||
+              job.salary_range ||
+              job.pay ||
+              "Salary not specified",
+            location:
+              job.location ||
+              job.city ||
+              job.address ||
+              "Location not specified",
+          };
+        },
+      );
+
       setJobs(transformedJobs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -98,8 +123,8 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
-        routes: [{ name: 'SavedJobs' }],
-      })
+        routes: [{ name: "SavedJobs" }],
+      }),
     );
   };
 
@@ -107,8 +132,8 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
-        routes: [{ name: 'ApplicationForm' }],
-      })
+        routes: [{ name: "ApplicationForm" }],
+      }),
     );
   };
 
@@ -121,7 +146,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
           <Text style={styles.jobTitle}>{item.title}</Text>
           <Text style={styles.jobCompany}>{item.company}</Text>
         </View>
-        
+
         <View style={styles.jobDetails}>
           <Text style={styles.jobSalary}>{item.salary}</Text>
           <Text style={styles.jobLocation}>{item.location}</Text>
@@ -135,19 +160,19 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
               isSaved && styles.savedButton,
             ]}
             onPress={() => handleSaveJob(item)}
-            disabled={isSaved}>
+            disabled={isSaved}
+          >
             <Text
-              style={[
-                styles.saveButtonText,
-                isSaved && styles.savedButtonText,
-              ]}>
-              {isSaved ? '✓ Saved' : 'Save Job'}
+              style={[styles.saveButtonText, isSaved && styles.savedButtonText]}
+            >
+              {isSaved ? "✓ Saved" : "Save Job"}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.actionButton, styles.applyButton]}
-            onPress={() => handleApply(item.id, item.title)}>
+            onPress={() => handleApply(item.id, item.title)}
+          >
             <Text style={styles.applyButtonText}>Apply</Text>
           </TouchableOpacity>
         </View>
@@ -196,7 +221,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.content}>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -216,13 +241,15 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
         <View style={styles.navigationButtons}>
           <TouchableOpacity
             style={styles.navButton}
-            onPress={navigateToSavedJobs}>
+            onPress={navigateToSavedJobs}
+          >
             <Text style={styles.navButtonText}>Go to Saved Jobs</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.navButton}
-            onPress={navigateToApplicationForm}>
+            onPress={navigateToApplicationForm}
+          >
             <Text style={styles.navButtonText}>Go to Application Form</Text>
           </TouchableOpacity>
         </View>
@@ -234,67 +261,67 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: "#F5F7FA",
   },
   content: {
     flex: 1,
   },
   searchContainer: {
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
   },
   searchInput: {
     height: 48,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: "#F5F7FA",
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   errorText: {
     fontSize: 16,
-    color: '#EF4444',
-    textAlign: 'center',
+    color: "#EF4444",
+    textAlign: "center",
     marginBottom: 16,
   },
   emptyText: {
     fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
+    color: "#6B7280",
+    textAlign: "center",
   },
   retryButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: "#3B82F6",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   listContent: {
     padding: 16,
   },
   jobCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -305,82 +332,82 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontWeight: "700",
+    color: "#1F2937",
     marginBottom: 4,
   },
   jobCompany: {
     fontSize: 15,
-    color: '#6B7280',
-    fontWeight: '500',
+    color: "#6B7280",
+    fontWeight: "500",
   },
   jobDetails: {
     marginBottom: 16,
   },
   jobSalary: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#10B981',
+    fontWeight: "600",
+    color: "#10B981",
     marginBottom: 4,
   },
   jobLocation: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: "#9CA3AF",
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   actionButton: {
     flex: 1,
     height: 44,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   saveButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: "#F3F4F6",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
   },
   savedButton: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
+    backgroundColor: "#10B981",
+    borderColor: "#10B981",
   },
   applyButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: "#3B82F6",
   },
   saveButtonText: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
   },
   savedButtonText: {
-    color: '#fff',
+    color: "#fff",
   },
   applyButtonText: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
   navigationButtons: {
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: "#E5E7EB",
     gap: 8,
   },
   navButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: "#6366F1",
     height: 44,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   navButtonText: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
 });
 
