@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,6 +27,16 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   const [contactNumber, setContactNumber] = useState('');
   const [whyHireYou, setWhyHireYou] = useState('');
 
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [contactError, setContactError] = useState('');
+  const [whyHireYouError, setWhyHireYouError] = useState('');
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const emailInputRef = useRef<TextInput>(null);
+  const contactInputRef = useRef<TextInput>(null);
+  const whyHireYouInputRef = useRef<TextInput>(null);
+
   const navigateToJobFinder = () => {
     navigation.dispatch(
       CommonActions.reset({
@@ -35,20 +46,111 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
     );
   };
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = (): boolean => {
+    let isValid = true;
+
+    // Reset errors
+    setNameError('');
+    setEmailError('');
+    setContactError('');
+    setWhyHireYouError('');
+
+    // Validate Name
+    if (!name.trim()) {
+      setNameError('Name is required');
+      isValid = false;
+    }
+
+    // Validate Email
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      isValid = false;
+    }
+
+    // Validate Contact Number
+    if (!contactNumber.trim()) {
+      setContactError('Contact number is required');
+      isValid = false;
+    } else if (contactNumber.trim().length < 10) {
+      setContactError('Contact number must be at least 10 digits');
+      isValid = false;
+    }
+
+    // Validate Why Hire You
+    if (!whyHireYou.trim()) {
+      setWhyHireYouError('This field is required');
+      isValid = false;
+    } else if (whyHireYou.trim().length < 20) {
+      setWhyHireYouError('Please provide at least 20 characters');
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const clearForm = () => {
+    setName('');
+    setEmail('');
+    setContactNumber('');
+    setWhyHireYou('');
+    setNameError('');
+    setEmailError('');
+    setContactError('');
+    setWhyHireYouError('');
+  };
+
   const handleSubmit = () => {
-    console.log('Form Submitted:');
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Contact Number:', contactNumber);
-    console.log('Why Hire You:', whyHireYou);
+    if (validateForm()) {
+      // Log submission
+      console.log('Form Submitted Successfully:');
+      console.log('Name:', name);
+      console.log('Email:', email);
+      console.log('Contact Number:', contactNumber);
+      console.log('Why Hire You:', whyHireYou);
+
+      // Show success alert
+      Alert.alert(
+        'Application Submitted! ✅',
+        'Your application has been submitted successfully. We will get back to you soon!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              clearForm();
+              navigateToJobFinder();
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Validation Error',
+        'Please fill in all required fields correctly.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const scrollToInput = (yOffset: number) => {
+    scrollViewRef.current?.scrollTo({ y: yOffset, animated: true });
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}>
+        style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -66,13 +168,22 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               Name <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, nameError && styles.inputError]}
               placeholder="Enter your full name"
               placeholderTextColor="#9CA3AF"
               value={name}
-              onChangeText={setName}
+              onChangeText={(text) => {
+                setName(text);
+                if (nameError) setNameError('');
+              }}
               autoCapitalize="words"
+              returnKeyType="next"
+              onSubmitEditing={() => emailInputRef.current?.focus()}
+              onFocus={() => scrollToInput(0)}
             />
+            {nameError ? (
+              <Text style={styles.errorText}>{nameError}</Text>
+            ) : null}
           </View>
 
           {/* Email Field */}
@@ -81,15 +192,25 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               Email <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              ref={emailInputRef}
+              style={[styles.input, emailError && styles.inputError]}
               placeholder="Enter your email address"
               placeholderTextColor="#9CA3AF"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (emailError) setEmailError('');
+              }}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={() => contactInputRef.current?.focus()}
+              onFocus={() => scrollToInput(100)}
             />
+            {emailError ? (
+              <Text style={styles.errorText}>{emailError}</Text>
+            ) : null}
           </View>
 
           {/* Contact Number Field */}
@@ -98,13 +219,23 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               Contact Number <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              ref={contactInputRef}
+              style={[styles.input, contactError && styles.inputError]}
               placeholder="Enter your phone number"
               placeholderTextColor="#9CA3AF"
               value={contactNumber}
-              onChangeText={setContactNumber}
+              onChangeText={(text) => {
+                setContactNumber(text);
+                if (contactError) setContactError('');
+              }}
               keyboardType="phone-pad"
+              returnKeyType="next"
+              onSubmitEditing={() => whyHireYouInputRef.current?.focus()}
+              onFocus={() => scrollToInput(200)}
             />
+            {contactError ? (
+              <Text style={styles.errorText}>{contactError}</Text>
+            ) : null}
           </View>
 
           {/* Why Should We Hire You Field */}
@@ -113,28 +244,42 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               Why should we hire you? <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Tell us why you're the best fit for this position..."
+              ref={whyHireYouInputRef}
+              style={[
+                styles.input,
+                styles.textArea,
+                whyHireYouError && styles.inputError,
+              ]}
+              placeholder="Tell us why you're the best fit for this position... (minimum 20 characters)"
               placeholderTextColor="#9CA3AF"
               value={whyHireYou}
-              onChangeText={setWhyHireYou}
+              onChangeText={(text) => {
+                setWhyHireYou(text);
+                if (whyHireYouError) setWhyHireYouError('');
+              }}
               multiline
               numberOfLines={6}
               textAlignVertical="top"
+              onFocus={() => scrollToInput(300)}
             />
+            {whyHireYouError ? (
+              <Text style={styles.errorText}>{whyHireYouError}</Text>
+            ) : null}
           </View>
 
           {/* Submit Button */}
           <TouchableOpacity
             style={styles.submitButton}
-            onPress={handleSubmit}>
+            onPress={handleSubmit}
+            activeOpacity={0.8}>
             <Text style={styles.submitButtonText}>Submit Application</Text>
           </TouchableOpacity>
 
           {/* Navigation Button */}
           <TouchableOpacity
             style={styles.backButton}
-            onPress={navigateToJobFinder}>
+            onPress={navigateToJobFinder}
+            activeOpacity={0.7}>
             <Text style={styles.backButtonText}>Back to Job Finder</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -199,9 +344,19 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  inputError: {
+    borderColor: '#EF4444',
+    borderWidth: 2,
+  },
   textArea: {
     height: 120,
     paddingTop: 14,
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#EF4444',
+    marginTop: 6,
+    marginLeft: 4,
   },
   submitButton: {
     backgroundColor: '#3B82F6',
