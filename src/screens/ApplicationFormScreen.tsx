@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { CommonActions } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
 
 type ApplicationFormScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ApplicationForm'>;
@@ -37,6 +38,8 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   const contactInputRef = useRef<TextInput>(null);
   const whyHireYouInputRef = useRef<TextInput>(null);
 
+  const { colors } = useTheme();
+
   const navigateToJobFinder = () => {
     navigation.dispatch(
       CommonActions.reset({
@@ -54,19 +57,16 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   const validateForm = (): boolean => {
     let isValid = true;
 
-    // Reset errors
     setNameError('');
     setEmailError('');
     setContactError('');
     setWhyHireYouError('');
 
-    // Validate Name
     if (!name.trim()) {
       setNameError('Name is required');
       isValid = false;
     }
 
-    // Validate Email
     if (!email.trim()) {
       setEmailError('Email is required');
       isValid = false;
@@ -75,7 +75,6 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
       isValid = false;
     }
 
-    // Validate Contact Number
     if (!contactNumber.trim()) {
       setContactError('Contact number is required');
       isValid = false;
@@ -84,7 +83,6 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
       isValid = false;
     }
 
-    // Validate Why Hire You
     if (!whyHireYou.trim()) {
       setWhyHireYouError('This field is required');
       isValid = false;
@@ -109,14 +107,12 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
 
   const handleSubmit = () => {
     if (validateForm()) {
-      // Log submission
       console.log('Form Submitted Successfully:');
       console.log('Name:', name);
       console.log('Email:', email);
       console.log('Contact Number:', contactNumber);
       console.log('Why Hire You:', whyHireYou);
 
-      // Show success alert
       Alert.alert(
         'Application Submitted! ✅',
         'Your application has been submitted successfully. We will get back to you soon!',
@@ -144,7 +140,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
@@ -156,21 +152,25 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Job Application Form</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Job Application Form</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
               Fill in your details below
             </Text>
           </View>
 
           {/* Name Field */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>
-              Name <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Name <Text style={[styles.required, { color: colors.error }]}>*</Text>
             </Text>
             <TextInput
-              style={[styles.input, nameError && styles.inputError]}
+              style={[
+                styles.input,
+                { backgroundColor: colors.surface, color: colors.text, borderColor: nameError ? colors.error : colors.border },
+                nameError && { borderWidth: 2 },
+              ]}
               placeholder="Enter your full name"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={name}
               onChangeText={(text) => {
                 setName(text);
@@ -182,20 +182,24 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               onFocus={() => scrollToInput(0)}
             />
             {nameError ? (
-              <Text style={styles.errorText}>{nameError}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{nameError}</Text>
             ) : null}
           </View>
 
           {/* Email Field */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>
-              Email <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Email <Text style={[styles.required, { color: colors.error }]}>*</Text>
             </Text>
             <TextInput
               ref={emailInputRef}
-              style={[styles.input, emailError && styles.inputError]}
+              style={[
+                styles.input,
+                { backgroundColor: colors.surface, color: colors.text, borderColor: emailError ? colors.error : colors.border },
+                emailError && { borderWidth: 2 },
+              ]}
               placeholder="Enter your email address"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
@@ -209,20 +213,24 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               onFocus={() => scrollToInput(100)}
             />
             {emailError ? (
-              <Text style={styles.errorText}>{emailError}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{emailError}</Text>
             ) : null}
           </View>
 
           {/* Contact Number Field */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>
-              Contact Number <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Contact Number <Text style={[styles.required, { color: colors.error }]}>*</Text>
             </Text>
             <TextInput
               ref={contactInputRef}
-              style={[styles.input, contactError && styles.inputError]}
+              style={[
+                styles.input,
+                { backgroundColor: colors.surface, color: colors.text, borderColor: contactError ? colors.error : colors.border },
+                contactError && { borderWidth: 2 },
+              ]}
               placeholder="Enter your phone number"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={contactNumber}
               onChangeText={(text) => {
                 setContactNumber(text);
@@ -234,24 +242,25 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               onFocus={() => scrollToInput(200)}
             />
             {contactError ? (
-              <Text style={styles.errorText}>{contactError}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{contactError}</Text>
             ) : null}
           </View>
 
           {/* Why Should We Hire You Field */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>
-              Why should we hire you? <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Why should we hire you? <Text style={[styles.required, { color: colors.error }]}>*</Text>
             </Text>
             <TextInput
               ref={whyHireYouInputRef}
               style={[
                 styles.input,
                 styles.textArea,
-                whyHireYouError && styles.inputError,
+                { backgroundColor: colors.surface, color: colors.text, borderColor: whyHireYouError ? colors.error : colors.border },
+                whyHireYouError && { borderWidth: 2 },
               ]}
               placeholder="Tell us why you're the best fit for this position... (minimum 20 characters)"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={whyHireYou}
               onChangeText={(text) => {
                 setWhyHireYou(text);
@@ -263,13 +272,13 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               onFocus={() => scrollToInput(300)}
             />
             {whyHireYouError ? (
-              <Text style={styles.errorText}>{whyHireYouError}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{whyHireYouError}</Text>
             ) : null}
           </View>
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={styles.submitButton}
+            style={[styles.submitButton, { backgroundColor: colors.primary }]}
             onPress={handleSubmit}
             activeOpacity={0.8}>
             <Text style={styles.submitButtonText}>Submit Application</Text>
@@ -277,10 +286,10 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
 
           {/* Navigation Button */}
           <TouchableOpacity
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={navigateToJobFinder}
             activeOpacity={0.7}>
-            <Text style={styles.backButtonText}>Back to Job Finder</Text>
+            <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Back to Job Finder</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -291,7 +300,6 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -310,12 +318,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 15,
-    color: '#6B7280',
   },
   formGroup: {
     marginBottom: 20,
@@ -323,30 +329,22 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 8,
   },
   required: {
-    color: '#EF4444',
+    fontWeight: '700',
   },
   input: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1F2937',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
-  },
-  inputError: {
-    borderColor: '#EF4444',
-    borderWidth: 2,
   },
   textArea: {
     height: 120,
@@ -354,12 +352,10 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: '#EF4444',
     marginTop: 6,
     marginLeft: 4,
   },
   submitButton: {
-    backgroundColor: '#3B82F6',
     height: 52,
     borderRadius: 12,
     justifyContent: 'center',
@@ -377,19 +373,16 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   backButton: {
-    backgroundColor: '#fff',
     height: 52,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
   },
 });
 

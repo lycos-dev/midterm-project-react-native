@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { CommonActions } from '@react-navigation/native';
 import { useSavedJobs } from '../context/SavedJobsContext';
+import { useTheme } from '../context/ThemeContext';
 
 type SavedJobsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SavedJobs'>;
@@ -26,6 +27,7 @@ interface Job {
 
 const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   const { savedJobs, unsaveJob } = useSavedJobs();
+  const { colors } = useTheme();
 
   const navigateToJobFinder = () => {
     navigation.dispatch(
@@ -42,21 +44,21 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   };
 
   const renderJobItem = ({ item }: { item: Job }) => (
-    <View style={styles.jobCard}>
+    <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.jobHeader}>
-        <Text style={styles.jobTitle}>{item.title}</Text>
-        <Text style={styles.jobCompany}>{item.company}</Text>
+        <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
+        <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
       </View>
       
       <View style={styles.jobDetails}>
-        <Text style={styles.jobSalary}>{item.salary}</Text>
-        <Text style={styles.jobLocation}>{item.location}</Text>
+        <Text style={[styles.jobSalary, { color: colors.success }]}>{item.salary}</Text>
+        <Text style={[styles.jobLocation, { color: colors.textSecondary }]}>{item.location}</Text>
       </View>
 
       <TouchableOpacity
-        style={styles.removeButton}
+        style={[styles.removeButton, { backgroundColor: colors.errorLight, borderColor: colors.error }]}
         onPress={() => handleRemoveJob(item.id, item.title)}>
-        <Text style={styles.removeButtonText}>Remove</Text>
+        <Text style={[styles.removeButtonText, { color: colors.error }]}>Remove</Text>
       </TouchableOpacity>
     </View>
   );
@@ -64,12 +66,12 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>📋</Text>
-      <Text style={styles.emptyTitle}>No Saved Jobs</Text>
-      <Text style={styles.emptyText}>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No Saved Jobs</Text>
+      <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
         Jobs you save will appear here
       </Text>
       <TouchableOpacity
-        style={styles.browseButton}
+        style={[styles.browseButton, { backgroundColor: colors.primary }]}
         onPress={navigateToJobFinder}>
         <Text style={styles.browseButtonText}>Browse Jobs</Text>
       </TouchableOpacity>
@@ -77,15 +79,15 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       <View style={styles.content}>
         {savedJobs.length === 0 ? (
           renderEmptyState()
         ) : (
           <>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>Saved Jobs</Text>
-              <Text style={styles.headerCount}>
+            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Saved Jobs</Text>
+              <Text style={[styles.headerCount, { color: colors.textSecondary }]}>
                 {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'}
               </Text>
             </View>
@@ -100,10 +102,9 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
           </>
         )}
 
-        {/* Navigation Button */}
-        <View style={styles.navigationButtons}>
+        <View style={[styles.navigationButtons, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <TouchableOpacity
-            style={styles.navButton}
+            style={[styles.navButton, { backgroundColor: colors.primaryLight }]}
             onPress={navigateToJobFinder}>
             <Text style={styles.navButtonText}>Go to Job Finder</Text>
           </TouchableOpacity>
@@ -116,16 +117,13 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
   },
   content: {
     flex: 1,
   },
   header: {
     padding: 16,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -133,18 +131,15 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   headerCount: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
   },
   listContent: {
     padding: 16,
   },
   jobCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -153,6 +148,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
   },
   jobHeader: {
     marginBottom: 12,
@@ -160,12 +156,10 @@ const styles = StyleSheet.create({
   jobTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 4,
   },
   jobCompany: {
     fontSize: 15,
-    color: '#6B7280',
     fontWeight: '500',
   },
   jobDetails: {
@@ -174,26 +168,21 @@ const styles = StyleSheet.create({
   jobSalary: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#10B981',
     marginBottom: 4,
   },
   jobLocation: {
     fontSize: 14,
-    color: '#9CA3AF',
   },
   removeButton: {
-    backgroundColor: '#FEE2E2',
     height: 44,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FCA5A5',
   },
   removeButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#DC2626',
   },
   emptyContainer: {
     flex: 1,
@@ -208,17 +197,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 15,
-    color: '#6B7280',
     textAlign: 'center',
     marginBottom: 24,
   },
   browseButton: {
-    backgroundColor: '#3B82F6',
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 8,
@@ -230,12 +216,9 @@ const styles = StyleSheet.create({
   },
   navigationButtons: {
     padding: 16,
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
   },
   navButton: {
-    backgroundColor: '#6366F1',
     height: 44,
     borderRadius: 8,
     justifyContent: 'center',
