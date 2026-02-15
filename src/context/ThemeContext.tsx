@@ -18,7 +18,7 @@ interface ThemeColors {
   inputBackground: string;
   placeholder: string;
   accent: string;
-  muted: string; // Added for gray "Saved" button
+  muted: string;
 }
 
 interface ThemeContextType {
@@ -43,13 +43,13 @@ const lightTheme: ThemeColors = {
   inputBackground: '#F8F9FA',
   placeholder: '#ADB5BD',
   accent: '#495057',
-  muted: '#868E96', // Gray for saved button
+  muted: '#868E96',
 };
 
 const darkTheme: ThemeColors = {
-  background: '#000000',
-  surface: '#1A1A1A',
-  card: '#1A1A1A',
+  background: '#0A0A0A',
+  surface: '#1F1F1F',
+  card: '#1F1F1F',
   text: '#FFFFFF',
   textSecondary: '#A0A0A0',
   primary: '#FFFFFF',
@@ -57,12 +57,12 @@ const darkTheme: ThemeColors = {
   success: '#FFFFFF',
   error: '#FFFFFF',
   errorLight: '#2A2A2A',
-  border: '#333333',
+  border: '#404040',
   shadow: '#000000',
   inputBackground: '#2A2A2A',
-  placeholder: '#666666',
+  placeholder: '#707070',
   accent: '#CCCCCC',
-  muted: '#6C757D', // Gray for saved button
+  muted: '#6C757D',
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

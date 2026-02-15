@@ -8,6 +8,8 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -251,66 +253,70 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      {/* NAV */}
-      <View style={[styles.nav, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <Text style={[styles.navTitle, { color: colors.text }]}>Job Finder</Text>
-        
-        <Pressable onPress={toggleTheme} style={styles.themeBtn}>
-          {({ pressed }) => (
-            <View style={[styles.themeTrack, { backgroundColor: colors.border, opacity: pressed ? 0.5 : 1 }]}>
-              <View style={[
-                styles.themeThumb,
-                { 
-                  backgroundColor: colors.text,
-                  transform: [{ translateX: theme === 'dark' ? 31 : 0 }]
-                }
-              ]} />
-              <View style={styles.themeIcons}>
-                <Text style={[styles.themeIcon, { opacity: theme === 'light' ? 1 : 0.3 }]}>☼</Text>
-                <Text style={[styles.themeIcon, { opacity: theme === 'dark' ? 1 : 0.3 }]}>☾</Text>
-              </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }}>
+          {/* NAV */}
+          <View style={[styles.nav, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+            <Text style={[styles.navTitle, { color: colors.text }]}>Job Finder</Text>
+            
+            <Pressable onPress={toggleTheme} style={styles.themeBtn}>
+              {({ pressed }) => (
+                <View style={[styles.themeTrack, { backgroundColor: colors.border, opacity: pressed ? 0.5 : 1 }]}>
+                  <View style={[
+                    styles.themeThumb,
+                    { 
+                      backgroundColor: colors.text,
+                      transform: [{ translateX: theme === 'dark' ? 34 : 0 }]
+                    }
+                  ]} />
+                  <View style={styles.themeIcons}>
+                    <Text style={[styles.themeIcon, { opacity: theme === 'light' ? 1 : 0.3 }]}>◉</Text>
+                    <Text style={[styles.themeIcon, { opacity: theme === 'dark' ? 1 : 0.3 }]}>☾</Text>
+                  </View>
+                </View>
+              )}
+            </Pressable>
+          </View>
+
+          {/* SEARCH */}
+          <View style={[styles.searchSection, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+            <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>⌕</Text>
+              <TextInput
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder="Search jobs..."
+                placeholderTextColor={colors.placeholder}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
             </View>
-          )}
-        </Pressable>
-      </View>
+            <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
+              {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
+            </Text>
+          </View>
 
-      {/* SEARCH */}
-      <View style={[styles.searchSection, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>⌕</Text>
-          <TextInput
-            style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Search jobs..."
-            placeholderTextColor={colors.placeholder}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-        <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
-          {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
-        </Text>
-      </View>
+          {renderContent()}
 
-      {renderContent()}
-
-      {/* BOTTOM */}
-      <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-        <Pressable
-          onPress={navigateToSavedJobs}
-          style={({ pressed }) => [
-            styles.savedBtn,
-            { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }
-          ]}>
-          <Text style={[styles.savedBtnText, { color: colors.surface }]}>
-            Saved Jobs
-          </Text>
-          {savedJobs.length > 0 && (
+          {/* BOTTOM */}
+          <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+            <Pressable
+              onPress={navigateToSavedJobs}
+              style={({ pressed }) => [
+                styles.savedBtn,
+                { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }
+              ]}>
+              <Text style={[styles.savedBtnText, { color: colors.surface }]}>
+                Saved Jobs
+              </Text>
+              {savedJobs.length > 0 && (
             <View style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.text }]}>
               <Text style={[styles.badgeText, { color: colors.text }]}>{savedJobs.length}</Text>
             </View>
           )}
         </Pressable>
       </View>
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
