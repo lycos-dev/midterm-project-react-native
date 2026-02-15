@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   FlatList,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -38,9 +39,22 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
     );
   };
 
-  const handleRemoveJob = (jobId: string, jobTitle: string) => {
-    unsaveJob(jobId);
-    console.log(`Job removed - ID: ${jobId}, Title: ${jobTitle}`);
+  const handleRemoveJob = (jobId: string, jobTitle: string, jobCompany: string) => {
+    Alert.alert(
+      'Remove Job',
+      `Are you sure you want to remove "${jobTitle}" at ${jobCompany} from your saved jobs?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            unsaveJob(jobId);
+            console.log(`Job removed - ID: ${jobId}, Title: ${jobTitle}`);
+          },
+        },
+      ]
+    );
   };
 
   const handleApply = () => {
@@ -54,8 +68,10 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
           <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
           <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
         </View>
-        <View style={[styles.savedBadge, { backgroundColor: colors.muted }]}>
-          <Text style={[styles.savedBadgeText, { color: colors.surface }]}>✓</Text>
+        <View style={[styles.savedBadge, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+          <View style={[styles.savedCheckmark, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.savedCheckText, { color: colors.text }]}>✓</Text>
+          </View>
         </View>
       </View>
       
@@ -89,7 +105,7 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
             styles.secondaryButton,
             { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
           ]}
-          onPress={() => handleRemoveJob(item.id, item.title)}>
+          onPress={() => handleRemoveJob(item.id, item.title, item.company)}>
           <Text style={[styles.buttonText, { color: colors.text }]}>Remove</Text>
         </Pressable>
       </View>
@@ -120,26 +136,32 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       {/* CUSTOM NAVIGATION BAR */}
       <View style={[styles.navbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <View style={styles.navLeft}>
-          <Pressable
-            onPress={navigateToJobFinder}
-            style={({ pressed }) => [
-              styles.backButton,
-              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 }
-            ]}>
-            <Text style={[styles.backButtonText, { color: colors.text }]}>← Back</Text>
-          </Pressable>
-          <Text style={[styles.navTitle, { color: colors.text }]}>Saved Jobs</Text>
-        </View>
         <Pressable
-          onPress={toggleTheme}
+          onPress={navigateToJobFinder}
           style={({ pressed }) => [
-            styles.themeButton,
-            { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 }
+            styles.backButton,
+            { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 }
           ]}>
-          <Text style={[styles.themeButtonText, { color: colors.surface }]}>
-            {theme === 'light' ? 'L' : 'D'}
-          </Text>
+          <Text style={[styles.backButtonText, { color: colors.text }]}>← Back</Text>
+        </Pressable>
+
+        <Text style={[styles.navTitle, { color: colors.text }]}>Saved Jobs</Text>
+        
+        {/* Theme Toggle Switch */}
+        <Pressable onPress={toggleTheme} style={styles.themeSwitch}>
+          <View style={[styles.themeSwitchTrack, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
+            <View style={[
+              styles.themeSwitchThumb,
+              { 
+                backgroundColor: colors.text,
+                transform: [{ translateX: theme === 'dark' ? 22 : 0 }]
+              }
+            ]} />
+            <View style={styles.themeSwitchLabels}>
+              <Text style={[styles.themeSwitchLabel, { color: theme === 'light' ? colors.surface : colors.textSecondary }]}>L</Text>
+              <Text style={[styles.themeSwitchLabel, { color: theme === 'dark' ? colors.surface : colors.textSecondary }]}>D</Text>
+            </View>
+          </View>
         </Pressable>
       </View>
 
@@ -182,38 +204,59 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-  },
-  navLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  navTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    letterSpacing: -0.3,
   },
   backButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
     borderWidth: 1,
+    width: 80,
   },
   backButtonText: {
     fontSize: 15,
     fontWeight: '600',
   },
-  themeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
+  navTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
   },
-  themeButtonText: {
-    fontSize: 14,
+  // THEME SWITCH
+  themeSwitch: {
+    padding: 4,
+    zIndex: 1,
+  },
+  themeSwitchTrack: {
+    width: 60,
+    height: 32,
+    borderRadius: 16,
+    padding: 3,
+    borderWidth: 1,
+    position: 'relative',
+  },
+  themeSwitchThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    position: 'absolute',
+    top: 2,
+    left: 2,
+  },
+  themeSwitchLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    height: '100%',
+  },
+  themeSwitchLabel: {
+    fontSize: 11,
     fontWeight: '700',
   },
   // SUBTITLE
@@ -257,15 +300,23 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   savedBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+  },
+  savedCheckmark: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  savedBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
+  savedCheckText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   divider: {
     height: 1,
