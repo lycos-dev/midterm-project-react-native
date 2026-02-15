@@ -113,7 +113,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     if (!isJobSaved(job.id)) {
       Alert.alert(
         'Save Job',
-        `Do you want to save "${job.title}" at ${job.company}?`,
+        `Save "${job.title}" at ${job.company}?`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -146,59 +146,54 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
 
     return (
       <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.cardHeader}>
-          <View style={styles.jobContent}>
+        <View style={styles.jobHeader}>
+          <View style={styles.jobHeaderLeft}>
             <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
             <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
           </View>
           {isSaved && (
-            <View style={[styles.savedBadge, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-              <View style={[styles.savedCheckmark, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.savedCheckText, { color: colors.text }]}>✓</Text>
-              </View>
+            <View style={[styles.savedIndicator, { borderColor: colors.border }]}>
+              <View style={[styles.savedDot, { backgroundColor: colors.text }]} />
             </View>
           )}
         </View>
         
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        
-        <View style={styles.jobDetails}>
-          <View style={styles.detailRow}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Salary</Text>
-            <Text style={[styles.detailValue, { color: colors.text }]}>{item.salary}</Text>
+        <View style={styles.jobInfo}>
+          <View style={styles.infoItem}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Salary</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>{item.salary}</Text>
           </View>
-          <View style={styles.detailRow}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Location</Text>
-            <Text style={[styles.detailValue, { color: colors.text }]}>{item.location}</Text>
+          <View style={styles.infoItem}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Location</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>{item.location}</Text>
           </View>
         </View>
 
-        <View style={styles.buttonRow}>
+        <View style={styles.actions}>
           <Pressable
             style={({ pressed }) => [
-              styles.button,
-              styles.secondaryButton,
+              styles.actionBtn,
               { 
-                backgroundColor: isSaved ? colors.muted : colors.surface,
+                backgroundColor: colors.surface,
                 borderColor: colors.border,
-                opacity: pressed ? 0.6 : 1,
+                opacity: isSaved ? 0.5 : (pressed ? 0.5 : 1),
               },
             ]}
             onPress={() => handleSaveJob(item)}
             disabled={isSaved}>
-            <Text style={[styles.buttonText, { color: isSaved ? colors.surface : colors.text }]}>
+            <Text style={[styles.actionText, { color: colors.text }]}>
               {isSaved ? 'Saved' : 'Save'}
             </Text>
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [
-              styles.button,
-              styles.primaryButton,
-              { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 },
+              styles.actionBtn,
+              styles.primaryAction,
+              { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
             ]}
             onPress={handleApply}>
-            <Text style={[styles.buttonText, { color: colors.surface }]}>Apply</Text>
+            <Text style={[styles.actionText, { color: colors.surface }]}>Apply</Text>
           </Pressable>
         </View>
       </View>
@@ -209,7 +204,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     if (loading) {
       return (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.text} />
           <Text style={[styles.statusText, { color: colors.textSecondary }]}>Loading jobs...</Text>
         </View>
       );
@@ -218,15 +213,15 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     if (error) {
       return (
         <View style={styles.centerContainer}>
-          <Text style={[styles.errorTitle, { color: colors.text }]}>Error Loading Jobs</Text>
-          <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>{error}</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>Error</Text>
+          <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>{error}</Text>
           <Pressable 
             style={({ pressed }) => [
-              styles.retryButton,
-              { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 },
+              styles.retryBtn,
+              { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
             ]}
             onPress={fetchJobs}>
-            <Text style={[styles.retryButtonText, { color: colors.surface }]}>Retry</Text>
+            <Text style={[styles.retryText, { color: colors.surface }]}>Retry</Text>
           </Pressable>
         </View>
       );
@@ -237,7 +232,7 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
         <View style={styles.centerContainer}>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>No Jobs Found</Text>
           <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
-            {searchQuery ? `No results for "${searchQuery}"` : 'No jobs available at the moment'}
+            {searchQuery ? `No results for "${searchQuery}"` : 'No jobs available'}
           </Text>
         </View>
       );
@@ -248,78 +243,70 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
         data={filteredJobs}
         renderItem={renderJobItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        updateCellsBatchingPeriod={50}
-        initialNumToRender={10}
-        windowSize={10}
       />
     );
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      {/* CUSTOM NAVIGATION BAR */}
-      <View style={[styles.navbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      {/* NAV */}
+      <View style={[styles.nav, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <Text style={[styles.navTitle, { color: colors.text }]}>Job Finder</Text>
         
-        {/* Theme Toggle Switch */}
-        <Pressable onPress={toggleTheme} style={styles.themeSwitch}>
-          <View style={[styles.themeSwitchTrack, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
-            <View style={[
-              styles.themeSwitchThumb,
-              { 
-                backgroundColor: colors.text,
-                transform: [{ translateX: theme === 'dark' ? 22 : 0 }]
-              }
-            ]} />
-            <View style={styles.themeSwitchLabels}>
-              <Text style={[styles.themeSwitchLabel, { color: theme === 'light' ? colors.surface : colors.textSecondary }]}>L</Text>
-              <Text style={[styles.themeSwitchLabel, { color: theme === 'dark' ? colors.surface : colors.textSecondary }]}>D</Text>
+        <Pressable onPress={toggleTheme} style={styles.themeBtn}>
+          {({ pressed }) => (
+            <View style={[styles.themeTrack, { backgroundColor: colors.border, opacity: pressed ? 0.5 : 1 }]}>
+              <View style={[
+                styles.themeThumb,
+                { 
+                  backgroundColor: colors.text,
+                  transform: [{ translateX: theme === 'dark' ? 31 : 0 }]
+                }
+              ]} />
+              <View style={styles.themeIcons}>
+                <Text style={[styles.themeIcon, { opacity: theme === 'light' ? 1 : 0.3 }]}>☼</Text>
+                <Text style={[styles.themeIcon, { opacity: theme === 'dark' ? 1 : 0.3 }]}>☾</Text>
+              </View>
             </View>
-          </View>
+          )}
         </Pressable>
       </View>
 
-      {/* SEARCH BAR */}
-      <View style={[styles.searchBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <TextInput
-          style={[styles.searchInput, { 
-            backgroundColor: colors.inputBackground, 
-            color: colors.text,
-            borderColor: colors.border,
-          }]}
-          placeholder="Search by job title..."
-          placeholderTextColor={colors.placeholder}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      {/* SEARCH */}
+      <View style={[styles.searchSection, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+        <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>⌕</Text>
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search jobs..."
+            placeholderTextColor={colors.placeholder}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
         <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
-          {filteredJobs.length} {filteredJobs.length === 1 ? 'result' : 'results'}
+          {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
         </Text>
       </View>
 
       {renderContent()}
 
-      {/* BOTTOM SAVED JOBS BUTTON */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      {/* BOTTOM */}
+      <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <Pressable
           onPress={navigateToSavedJobs}
           style={({ pressed }) => [
-            styles.savedJobsButton,
-            { 
-              backgroundColor: colors.primary,
-              opacity: pressed ? 0.6 : 1,
-            }
+            styles.savedBtn,
+            { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }
           ]}>
-          <Text style={[styles.savedJobsButtonText, { color: colors.surface }]}>
+          <Text style={[styles.savedBtnText, { color: colors.surface }]}>
             Saved Jobs
           </Text>
           {savedJobs.length > 0 && (
-            <View style={[styles.counter, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.counterText, { color: colors.primary }]}>{savedJobs.length}</Text>
+            <View style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.text }]}>
+              <Text style={[styles.badgeText, { color: colors.text }]}>{savedJobs.length}</Text>
             </View>
           )}
         </Pressable>
@@ -332,234 +319,220 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // NAVIGATION BAR
-  navbar: {
+  // NAV
+  nav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     borderBottomWidth: 1,
   },
   navTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
-  // THEME SWITCH
-  themeSwitch: {
+  // THEME
+  themeBtn: {
     padding: 4,
   },
-  themeSwitchTrack: {
-    width: 60,
-    height: 32,
-    borderRadius: 16,
+  themeTrack: {
+    width: 68,
+    height: 34,
+    borderRadius: 17,
     padding: 3,
-    borderWidth: 1,
     position: 'relative',
   },
-  themeSwitchThumb: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+  themeThumb: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     position: 'absolute',
-    top: 2,
-    left: 2,
+    top: 3,
+    left: 3,
   },
-  themeSwitchLabels: {
+  themeIcons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 8,
     height: '100%',
   },
-  themeSwitchLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+  themeIcon: {
+    fontSize: 14,
+    fontWeight: '400',
   },
-  // SEARCH BAR
-  searchBar: {
-    padding: 16,
+  // SEARCH
+  searchSection: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
   },
-  searchInput: {
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
     height: 44,
     borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 15,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    marginBottom: 8,
+    marginBottom: 10,
+  },
+  searchIcon: {
+    fontSize: 18,
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
   },
   resultCount: {
     fontSize: 13,
-    letterSpacing: 0.2,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: 40,
   },
   statusText: {
     marginTop: 16,
     fontSize: 15,
   },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  retryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 6,
-  },
-  retryButtonText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     marginBottom: 8,
   },
   emptyMessage: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: 'center',
+    marginBottom: 24,
   },
-  listContent: {
-    padding: 16,
+  retryBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 6,
+  },
+  retryText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  list: {
+    padding: 20,
     paddingBottom: 100,
   },
   jobCard: {
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 6,
+    padding: 20,
     marginBottom: 16,
     borderWidth: 1,
   },
-  cardHeader: {
+  jobHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  jobContent: {
+  jobHeaderLeft: {
     flex: 1,
     paddingRight: 12,
   },
   jobTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '600',
     marginBottom: 4,
-    letterSpacing: -0.2,
-    lineHeight: 22,
+    letterSpacing: -0.3,
   },
   jobCompany: {
-    fontSize: 14,
-    letterSpacing: 0.1,
+    fontSize: 15,
   },
-  savedBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+  savedIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
-  },
-  savedCheckmark: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  savedCheckText: {
-    fontSize: 12,
-    fontWeight: '700',
+  savedDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
-  divider: {
-    height: 1,
-    marginBottom: 12,
-  },
-  jobDetails: {
-    gap: 8,
+  jobInfo: {
     marginBottom: 16,
+    gap: 10,
   },
-  detailRow: {
+  infoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  detailLabel: {
+  infoLabel: {
     fontSize: 13,
-    fontWeight: '500',
-    letterSpacing: 0.3,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  detailValue: {
+  infoValue: {
     fontSize: 14,
     fontWeight: '500',
     flex: 1,
     textAlign: 'right',
   },
-  buttonRow: {
+  actions: {
     flexDirection: 'row',
     gap: 10,
   },
-  button: {
+  actionBtn: {
     flex: 1,
-    height: 42,
+    height: 44,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  secondaryButton: {
     borderWidth: 1,
   },
-  primaryButton: {
+  primaryAction: {
+    borderWidth: 0,
   },
-  buttonText: {
+  actionText: {
     fontSize: 14,
     fontWeight: '600',
-    letterSpacing: 0.3,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  // BOTTOM BAR
-  bottomBar: {
+  // BOTTOM
+  bottom: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 16,
+    padding: 20,
     borderTopWidth: 1,
   },
-  savedJobsButton: {
-    height: 50,
-    borderRadius: 8,
+  savedBtn: {
+    height: 52,
+    borderRadius: 6,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
   },
-  savedJobsButtonText: {
+  savedBtnText: {
     fontSize: 16,
     fontWeight: '600',
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
-  counter: {
+  badge: {
     minWidth: 24,
     height: 24,
     borderRadius: 12,
     paddingHorizontal: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
   },
-  counterText: {
+  badgeText: {
     fontSize: 12,
     fontWeight: '700',
   },

@@ -162,18 +162,24 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   };
 
   const handleCancel = () => {
-    Alert.alert(
-      'Cancel Application',
-      'Are you sure you want to cancel? All entered information will be lost.',
-      [
-        { text: 'Keep Editing', style: 'cancel' },
-        {
-          text: 'Cancel & Return',
-          style: 'destructive',
-          onPress: navigateToJobFinder,
-        },
-      ]
-    );
+    const hasInput = name.trim() || email.trim() || contactNumber.trim() || whyHireYou.trim();
+    
+    if (hasInput) {
+      Alert.alert(
+        'Cancel Application',
+        'Are you sure you want to cancel? All entered information will be lost.',
+        [
+          { text: 'Keep Editing', style: 'cancel' },
+          {
+            text: 'Cancel & Return',
+            style: 'destructive',
+            onPress: navigateToJobFinder,
+          },
+        ]
+      );
+    } else {
+      navigateToJobFinder();
+    }
   };
 
   const scrollToInput = (yOffset: number) => {
@@ -190,9 +196,9 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
           onPress={navigateToJobFinder}
           style={({ pressed }) => [
             styles.backButton,
-            { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 }
+            { opacity: pressed ? 0.6 : 1 }
           ]}>
-          <Text style={[styles.backButtonText, { color: colors.text }]}>← Back</Text>
+          <Text style={[styles.backButtonText, { color: colors.text }]}>← Job Finder</Text>
         </Pressable>
 
         <Text style={[styles.navTitle, { color: colors.text }]}>Application Form</Text>
@@ -204,12 +210,12 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
               styles.themeSwitchThumb,
               { 
                 backgroundColor: colors.text,
-                transform: [{ translateX: theme === 'dark' ? 22 : 0 }]
+                transform: [{ translateX: theme === 'dark' ? 24 : 0 }]
               }
             ]} />
             <View style={styles.themeSwitchLabels}>
-              <Text style={[styles.themeSwitchLabel, { color: theme === 'light' ? colors.surface : colors.textSecondary }]}>L</Text>
-              <Text style={[styles.themeSwitchLabel, { color: theme === 'dark' ? colors.surface : colors.textSecondary }]}>D</Text>
+              <Text style={[styles.themeSwitchLabel, { color: theme === 'light' ? colors.surface : colors.textSecondary }]}>☀️</Text>
+              <Text style={[styles.themeSwitchLabel, { color: theme === 'dark' ? colors.surface : colors.textSecondary }]}>🌙</Text>
             </View>
           </View>
         </Pressable>
@@ -218,7 +224,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
 
         <ScrollView
           ref={scrollViewRef}
@@ -404,13 +410,11 @@ const styles = StyleSheet.create({
   },
   backButton: {
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    width: 80,
+    paddingHorizontal: 4,
+    width: 110,
   },
   backButtonText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
   },
   navTitle: {
@@ -428,20 +432,20 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   themeSwitchTrack: {
-    width: 60,
+    width: 64,
     height: 32,
     borderRadius: 16,
-    padding: 3,
+    padding: 2,
     borderWidth: 1,
     position: 'relative',
   },
   themeSwitchThumb: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     position: 'absolute',
-    top: 2,
-    left: 2,
+    top: 1,
+    left: 1,
   },
   themeSwitchLabels: {
     flexDirection: 'row',
