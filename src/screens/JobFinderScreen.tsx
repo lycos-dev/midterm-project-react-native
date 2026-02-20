@@ -10,6 +10,7 @@ import {
   Alert,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,6 +30,7 @@ interface Job {
   company: string;
   salary: string;
   location: string;
+  logo?: string;
 }
 
 const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
@@ -76,16 +78,35 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
       
       const transformedJobs: Job[] = jobsArray.map((job: any, index: number) => {
         const title = job.title || job.job_title || job.position || 'No Title';
-        const company = job.company || job.company_name || job.employer || 'Unknown Company';
+        const company = job.companyName || job.company || job.company_name || job.employer || 'Unknown Company';
         
         const stableId = `${company}-${title}-${index}`.replace(/\s+/g, '-').toLowerCase();
+        
+        // Extract salary with proper handling of minSalary, maxSalary, and currency
+        let salaryText = 'Negotiable';
+        if (job.minSalary && job.maxSalary && job.currency) {
+          salaryText = `${job.currency} ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}`;
+        } else if (job.minSalary && job.currency) {
+          salaryText = `${job.currency} ${job.minSalary.toLocaleString()}`;
+        } else if (job.salary || job.salary_range || job.pay) {
+          salaryText = job.salary || job.salary_range || job.pay;
+        }
+        
+        // Extract location from locations array
+        let locationText = 'Location not specified';
+        if (job.locations && Array.isArray(job.locations) && job.locations.length > 0) {
+          locationText = job.locations.join(', ');
+        } else if (job.location || job.city || job.address) {
+          locationText = job.location || job.city || job.address;
+        }
         
         return {
           id: stableId,
           title: title,
           company: company,
-          salary: job.salary || job.salary_range || job.pay || 'Salary not specified',
-          location: job.location || job.city || job.address || 'Location not specified',
+          salary: salaryText,
+          location: locationText,
+          logo: job.companyLogo || job.logo || job.company_logo || job.image || undefined,
         };
       });
       
@@ -149,15 +170,33 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     return (
       <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.jobHeader}>
-          <View style={styles.jobHeaderLeft}>
-            <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
-            <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
+          {/* Logo */}
+          <View style={[styles.logoContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {item.logo ? (
+              <Image 
+                source={{ uri: item.logo }} 
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            ) : (
+              <Text style={[styles.logoPlaceholder, { color: colors.textSecondary }]}>
+                {item.company.charAt(0).toUpperCase()}
+              </Text>
+            )}
           </View>
-          {isSaved && (
-            <View style={[styles.savedIndicator, { borderColor: colors.border }]}>
-              <View style={[styles.savedDot, { backgroundColor: colors.text }]} />
+
+          {/* Job Info */}
+          <View style={styles.jobHeaderContent}>
+            <View style={styles.jobHeaderLeft}>
+              <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
+              <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
             </View>
-          )}
+            {isSaved && (
+              <View style={[styles.savedIndicator, { borderColor: colors.border }]}>
+                <View style={[styles.savedDot, { backgroundColor: colors.text }]} />
+              </View>
+            )}
+          </View>
         </View>
         
         <View style={styles.jobInfo}>
@@ -253,9 +292,9 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }}>
-          {/* NAV */}
+      <View style={{ flex: 1 }}>
+        {/* NAV */}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={[styles.nav, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
             <Text style={[styles.navTitle, { color: colors.text }]}>Job Finder</Text>
             
@@ -270,15 +309,17 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
                     }
                   ]} />
                   <View style={styles.themeIcons}>
-                    <Text style={[styles.themeIcon, { opacity: theme === 'light' ? 1 : 0.3 }]}>◉</Text>
-                    <Text style={[styles.themeIcon, { opacity: theme === 'dark' ? 1 : 0.3 }]}>☾</Text>
+                    <Text style={[styles.sunIcon, { color: colors.text, opacity: theme === 'light' ? 1 : 0.3 }]}>☼</Text>
+                    <Text style={[styles.themeIcon, { color: colors.text, opacity: theme === 'dark' ? 1 : 0.3 }]}>☾</Text>
                   </View>
                 </View>
               )}
             </Pressable>
           </View>
+        </TouchableWithoutFeedback>
 
-          {/* SEARCH */}
+        {/* SEARCH */}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={[styles.searchSection, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
             <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>⌕</Text>
@@ -294,29 +335,29 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
               {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
             </Text>
           </View>
+        </TouchableWithoutFeedback>
 
-          {renderContent()}
+        {renderContent()}
 
-          {/* BOTTOM */}
-          <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-            <Pressable
-              onPress={navigateToSavedJobs}
-              style={({ pressed }) => [
-                styles.savedBtn,
-                { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }
-              ]}>
-              <Text style={[styles.savedBtnText, { color: colors.surface }]}>
-                Saved Jobs
-              </Text>
-              {savedJobs.length > 0 && (
+        {/* BOTTOM */}
+        <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+          <Pressable
+            onPress={navigateToSavedJobs}
+            style={({ pressed }) => [
+              styles.savedBtn,
+              { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }
+            ]}>
+            <Text style={[styles.savedBtnText, { color: colors.surface }]}>
+              Saved Jobs
+            </Text>
+            {savedJobs.length > 0 && (
             <View style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.text }]}>
               <Text style={[styles.badgeText, { color: colors.text }]}>{savedJobs.length}</Text>
             </View>
           )}
         </Pressable>
       </View>
-        </View>
-      </TouchableWithoutFeedback>
+      </View>
     </SafeAreaView>
   );
 };
@@ -362,8 +403,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingLeft: 6,
+    paddingRight: 8,
     height: '100%',
+  },
+  sunIcon: {
+    fontSize: 18,
+    fontWeight: '400',
   },
   themeIcon: {
     fontSize: 14,
@@ -437,9 +483,31 @@ const styles = StyleSheet.create({
   },
   jobHeader: {
     flexDirection: 'row',
+    marginBottom: 16,
+    gap: 12,
+  },
+  logoContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
+  },
+  logoPlaceholder: {
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  jobHeaderContent: {
+    flex: 1,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
   },
   jobHeaderLeft: {
     flex: 1,

@@ -6,6 +6,8 @@ import {
   Pressable,
   FlatList,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -42,7 +44,7 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   const handleRemoveJob = (jobId: string, jobTitle: string, jobCompany: string) => {
     Alert.alert(
       'Remove Job',
-      `Are you sure you want to remove "${jobTitle}" at ${jobCompany} from your saved jobs?`,
+      `Remove "${jobTitle}" at ${jobCompany}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -63,50 +65,49 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 
   const renderJobItem = ({ item }: { item: Job }) => (
     <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={styles.cardHeader}>
-        <View style={styles.jobContent}>
+      <View style={styles.jobHeader}>
+        <View style={styles.jobHeaderLeft}>
           <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
           <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
         </View>
-        <View style={[styles.savedBadge, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-          <View style={[styles.savedCheckmark, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.savedCheckText, { color: colors.text }]}>✓</Text>
-          </View>
+        <View style={[styles.savedIndicator, { borderColor: colors.border }]}>
+          <View style={[styles.savedDot, { backgroundColor: colors.text }]} />
         </View>
       </View>
       
-      <View style={[styles.divider, { backgroundColor: colors.border }]} />
-      
-      <View style={styles.jobDetails}>
-        <View style={styles.detailRow}>
-          <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Salary</Text>
-          <Text style={[styles.detailValue, { color: colors.text }]}>{item.salary}</Text>
+      <View style={styles.jobInfo}>
+        <View style={styles.infoItem}>
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Salary</Text>
+          <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>{item.salary}</Text>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Location</Text>
-          <Text style={[styles.detailValue, { color: colors.text }]}>{item.location}</Text>
+        <View style={styles.infoItem}>
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Location</Text>
+          <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>{item.location}</Text>
         </View>
       </View>
 
-      <View style={styles.buttonRow}>
+      <View style={styles.actions}>
         <Pressable
           style={({ pressed }) => [
-            styles.button,
-            styles.primaryButton,
-            { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 },
+            styles.actionBtn,
+            styles.primaryAction,
+            { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
           ]}
           onPress={handleApply}>
-          <Text style={[styles.buttonText, { color: colors.surface }]}>Apply</Text>
+          <Text style={[styles.actionText, { color: colors.surface }]}>Apply</Text>
         </Pressable>
 
         <Pressable
           style={({ pressed }) => [
-            styles.button,
-            styles.secondaryButton,
-            { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
+            styles.actionBtn,
+            { 
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              opacity: pressed ? 0.5 : 1,
+            },
           ]}
           onPress={() => handleRemoveJob(item.id, item.title, item.company)}>
-          <Text style={[styles.buttonText, { color: colors.text }]}>Remove</Text>
+          <Text style={[styles.actionText, { color: colors.text }]}>Remove</Text>
         </Pressable>
       </View>
     </View>
@@ -124,7 +125,7 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
       <Pressable
         style={({ pressed }) => [
           styles.browseButton,
-          { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 },
+          { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
         ]}
         onPress={navigateToJobFinder}>
         <Text style={[styles.browseButtonText, { color: colors.surface }]}>Browse Jobs</Text>
@@ -134,62 +135,61 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      {/* CUSTOM NAVIGATION BAR */}
-      <View style={[styles.navbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable
-          onPress={navigateToJobFinder}
-          style={({ pressed }) => [
-            styles.backButton,
-            { opacity: pressed ? 0.6 : 1 }
-          ]}>
-          <Text style={[styles.backButtonText, { color: colors.text }]}>← Back</Text>
-        </Pressable>
+      <View style={{ flex: 1 }}>
+        {/* NAV */}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={[styles.nav, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+            <Pressable onPress={navigateToJobFinder} style={styles.backBtn}>
+              {({ pressed }) => (
+                <Text style={[styles.backText, { color: colors.text, opacity: pressed ? 0.5 : 1 }]}>← Back</Text>
+              )}
+            </Pressable>
 
-        <Text style={[styles.navTitle, { color: colors.text }]}>Saved Jobs</Text>
-        
-        {/* Theme Toggle Switch */}
-        <Pressable onPress={toggleTheme} style={styles.themeSwitch}>
-          <View style={[styles.themeSwitchTrack, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
-            <View style={[
-              styles.themeSwitchThumb,
-              { 
-                backgroundColor: colors.text,
-                transform: [{ translateX: theme === 'dark' ? 24 : 0 }]
-              }
-            ]} />
-            <View style={styles.themeSwitchLabels}>
-              <Text style={[styles.themeSwitchLabel, { color: theme === 'light' ? colors.surface : colors.textSecondary }]}>☀️</Text>
-              <Text style={[styles.themeSwitchLabel, { color: theme === 'dark' ? colors.surface : colors.textSecondary }]}>🌙</Text>
-            </View>
+            <Text style={[styles.navTitle, { color: colors.text }]}>Saved Jobs</Text>
+            
+            <Pressable onPress={toggleTheme} style={styles.themeBtn}>
+              {({ pressed }) => (
+                <View style={[styles.themeTrack, { backgroundColor: colors.border, opacity: pressed ? 0.5 : 1 }]}>
+                  <View style={[
+                    styles.themeThumb,
+                    { 
+                      backgroundColor: colors.text,
+                      transform: [{ translateX: theme === 'dark' ? 34 : 0 }]
+                    }
+                  ]} />
+                  <View style={styles.themeIcons}>
+                    <Text style={[styles.sunIcon, { color: colors.text, opacity: theme === 'light' ? 1 : 0.3 }]}>☼</Text>
+                    <Text style={[styles.themeIcon, { color: colors.text, opacity: theme === 'dark' ? 1 : 0.3 }]}>☾</Text>
+                  </View>
+                </View>
+              )}
+            </Pressable>
           </View>
-        </Pressable>
-      </View>
+        </TouchableWithoutFeedback>
 
-      {/* SUBTITLE */}
-      {savedJobs.length > 0 && (
-        <View style={[styles.subtitle, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <Text style={[styles.subtitleText, { color: colors.textSecondary }]}>
-            {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'} saved
-          </Text>
-        </View>
-      )}
-      
-      {savedJobs.length === 0 ? (
-        renderEmptyState()
-      ) : (
-        <FlatList
-          data={savedJobs}
-          renderItem={renderJobItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          updateCellsBatchingPeriod={50}
-          initialNumToRender={10}
-          windowSize={10}
-        />
-      )}
+        {/* SUBTITLE */}
+        {savedJobs.length > 0 && (
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={[styles.subtitle, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+              <Text style={[styles.subtitleText, { color: colors.textSecondary }]}>
+                {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'} saved
+              </Text>
+            </View>
+          </TouchableWithoutFeedback>
+        )}
+        
+        {savedJobs.length === 0 ? (
+          renderEmptyState()
+        ) : (
+          <FlatList
+            data={savedJobs}
+            renderItem={renderJobItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 };
@@ -198,170 +198,159 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // NAVIGATION BAR
-  navbar: {
+  // NAV
+  nav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     borderBottomWidth: 1,
   },
-  backButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    width: 80,
+  backBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    marginLeft: -8,
+    width: 100,
   },
-  backButtonText: {
+  backText: {
     fontSize: 16,
     fontWeight: '600',
   },
   navTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
     position: 'absolute',
     left: 0,
     right: 0,
     textAlign: 'center',
   },
-  // THEME SWITCH
-  themeSwitch: {
+  // THEME
+  themeBtn: {
     padding: 4,
     zIndex: 1,
   },
-  themeSwitchTrack: {
-    width: 64,
-    height: 32,
-    borderRadius: 16,
-    padding: 2,
-    borderWidth: 1,
+  themeTrack: {
+    width: 68,
+    height: 34,
+    borderRadius: 17,
+    padding: 3,
     position: 'relative',
   },
-  themeSwitchThumb: {
+  themeThumb: {
     width: 28,
     height: 28,
     borderRadius: 14,
     position: 'absolute',
-    top: 1,
-    left: 1,
+    top: 3,
+    left: 3,
   },
-  themeSwitchLabels: {
+  themeIcons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingLeft: 6,
+    paddingRight: 8,
     height: '100%',
   },
-  themeSwitchLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+  sunIcon: {
+    fontSize: 18,
+    fontWeight: '400',
+  },
+  themeIcon: {
+    fontSize: 14,
+    fontWeight: '400',
   },
   // SUBTITLE
   subtitle: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
   subtitleText: {
     fontSize: 13,
-    letterSpacing: 0.2,
   },
-  listContent: {
-    padding: 16,
+  list: {
+    padding: 20,
   },
   jobCard: {
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 6,
+    padding: 20,
     marginBottom: 16,
     borderWidth: 1,
   },
-  cardHeader: {
+  jobHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  jobContent: {
+  jobHeaderLeft: {
     flex: 1,
     paddingRight: 12,
   },
   jobTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '600',
     marginBottom: 4,
-    letterSpacing: -0.2,
-    lineHeight: 22,
+    letterSpacing: -0.3,
   },
   jobCompany: {
-    fontSize: 14,
-    letterSpacing: 0.1,
+    fontSize: 15,
   },
-  savedBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+  savedIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
-  },
-  savedCheckmark: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  savedCheckText: {
-    fontSize: 12,
-    fontWeight: '700',
+  savedDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
-  divider: {
-    height: 1,
-    marginBottom: 12,
-  },
-  jobDetails: {
-    gap: 8,
+  jobInfo: {
     marginBottom: 16,
+    gap: 10,
   },
-  detailRow: {
+  infoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  detailLabel: {
+  infoLabel: {
     fontSize: 13,
-    fontWeight: '500',
-    letterSpacing: 0.3,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  detailValue: {
+  infoValue: {
     fontSize: 14,
     fontWeight: '500',
     flex: 1,
     textAlign: 'right',
   },
-  buttonRow: {
+  actions: {
     flexDirection: 'row',
     gap: 10,
   },
-  button: {
+  actionBtn: {
     flex: 1,
-    height: 42,
+    height: 44,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  primaryButton: {
-  },
-  secondaryButton: {
     borderWidth: 1,
   },
-  buttonText: {
+  primaryAction: {
+    borderWidth: 0,
+  },
+  actionText: {
     fontSize: 14,
     fontWeight: '600',
-    letterSpacing: 0.3,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   emptyContainer: {
     flex: 1,
@@ -382,18 +371,18 @@ const styles = StyleSheet.create({
     fontSize: 32,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     marginBottom: 8,
   },
   emptyMessage: {
-    fontSize: 14,
+    fontSize: 15,
     marginBottom: 32,
     textAlign: 'center',
   },
   browseButton: {
     paddingVertical: 12,
-    paddingHorizontal: 32,
+    paddingHorizontal: 28,
     borderRadius: 6,
   },
   browseButtonText: {
