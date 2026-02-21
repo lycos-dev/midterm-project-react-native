@@ -131,8 +131,8 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <View style={[styles.emptyIcon, { borderColor: colors.border }]}>
-        <Text style={[styles.emptyIconText, { color: colors.textSecondary }]}>▢</Text>
+      <View style={[styles.emptyIconWrap, { borderColor: colors.border }]}>
+        <Feather name="bookmark" size={36} color={colors.textSecondary} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text }]}>No Saved Jobs</Text>
       <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
@@ -307,17 +307,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 40,
   },
-  emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 2,
+  emptyIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
-  },
-  emptyIconText: {
-    fontSize: 32,
   },
   emptyTitle: {
     fontSize: 20,
