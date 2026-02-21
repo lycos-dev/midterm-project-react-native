@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
-  Switch,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,6 +18,17 @@ type SettingsScreenProps = {
 
 const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   const { colors, theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const translateX = useRef(new Animated.Value(isDark ? 22 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(translateX, {
+      toValue: isDark ? 22 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isDark]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
@@ -34,23 +45,30 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
           <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.rowLeft}>
               <Text style={[styles.rowIcon, { color: colors.text }]}>
-                {theme === 'dark' ? '☾' : '☼'}
+                {isDark ? '☾' : '☼'}
               </Text>
               <View>
                 <Text style={[styles.rowTitle, { color: colors.text }]}>
-                  {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                  {isDark ? 'Dark Mode' : 'Light Mode'}
                 </Text>
                 <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>
-                  {theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                  {isDark ? 'Switch to light theme' : 'Switch to dark theme'}
                 </Text>
               </View>
             </View>
-            <Switch
-              value={theme === 'dark'}
-              onValueChange={toggleTheme}
-              trackColor={{ false: colors.border, true: colors.text }}
-              thumbColor={colors.background}
-            />
+
+            {/* Custom Toggle */}
+            <Pressable onPress={toggleTheme} style={styles.toggleHitbox}>
+              <View style={[
+                styles.track,
+                { backgroundColor: isDark ? colors.text : colors.border },
+              ]}>
+                <Animated.View style={[
+                  styles.thumb,
+                  { backgroundColor: colors.background, transform: [{ translateX }] },
+                ]} />
+              </View>
+            </Pressable>
           </View>
         </View>
 
@@ -113,6 +131,21 @@ const styles = StyleSheet.create({
   },
   rowSubtitle: {
     fontSize: 13,
+  },
+  toggleHitbox: {
+    padding: 4,
+  },
+  track: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  thumb: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
   },
 });
 

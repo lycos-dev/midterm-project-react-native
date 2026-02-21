@@ -7,7 +7,6 @@ import {
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import { CommonActions } from '@react-navigation/native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
 type ApplicationFormScreenProps = {
@@ -41,14 +41,14 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   const contactInputRef = useRef<TextInput>(null);
   const whyHireYouInputRef = useRef<TextInput>(null);
 
-  const { colors, theme, toggleTheme } = useTheme();
+  const { colors } = useTheme();
   const fromScreen = route.params?.fromScreen || 'JobFinder';
 
-  const navigateToJobFinder = () => {
+  const goBack = () => {
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
-        routes: [{ name: 'JobFinder' }],
+        routes: [{ name: fromScreen }],
       })
     );
   };
@@ -118,19 +118,12 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
     if (validateForm()) {
       Alert.alert(
         'Submit Application',
-        `Are you sure you want to submit this application?\n\nName: ${name}\nEmail: ${email}\nContact: ${contactNumber}`,
+        `Are you sure you want to submit?\n\nName: ${name}\nEmail: ${email}\nContact: ${contactNumber}`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Submit',
             onPress: () => {
-              console.log('Form Submitted:');
-              console.log('Name:', name);
-              console.log('Email:', email);
-              console.log('Contact:', contactNumber);
-              console.log('Why Hire You:', whyHireYou);
-              console.log('From:', fromScreen);
-
               Alert.alert(
                 'Application Submitted',
                 'Your application has been submitted successfully. We will get back to you soon!',
@@ -139,11 +132,7 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
                     text: 'OK',
                     onPress: () => {
                       clearForm();
-                      if (fromScreen === 'SavedJobs') {
-                        navigateToJobFinder();
-                      } else {
-                        navigation.goBack();
-                      }
+                      goBack();
                     },
                   },
                 ]
@@ -153,32 +142,24 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
         ]
       );
     } else {
-      Alert.alert(
-        'Validation Error',
-        'Please fill in all fields correctly.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Validation Error', 'Please fill in all fields correctly.', [{ text: 'OK' }]);
     }
   };
 
   const handleCancel = () => {
     const hasInput = name.trim() || email.trim() || contactNumber.trim() || whyHireYou.trim();
-    
+
     if (hasInput) {
       Alert.alert(
         'Cancel Application',
         'Are you sure you want to cancel? All entered information will be lost.',
         [
           { text: 'Keep Editing', style: 'cancel' },
-          {
-            text: 'Cancel & Return',
-            style: 'destructive',
-            onPress: navigateToJobFinder,
-          },
+          { text: 'Cancel & Return', style: 'destructive', onPress: goBack },
         ]
       );
     } else {
-      navigateToJobFinder();
+      goBack();
     }
   };
 
@@ -188,44 +169,38 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
     }, 100);
   };
 
+  const renderField = (
+    label: string,
+    error: string,
+    input: React.ReactNode
+  ) => (
+    <View style={styles.formGroup}>
+      <View style={styles.labelRow}>
+        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+        {error ? <Text style={[styles.errorInline, { color: colors.textSecondary }]}>{error}</Text> : null}
+      </View>
+      {input}
+    </View>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      {/* CUSTOM NAVIGATION BAR */}
-      <View style={[styles.navbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      {/* NAV */}
+      <View style={[styles.nav, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <Pressable
-          onPress={navigateToJobFinder}
-          style={({ pressed }) => [
-            styles.backButton,
-            { opacity: pressed ? 0.6 : 1 }
-          ]}>
-          <Text style={[styles.backButtonText, { color: colors.text }]}>← Job Finder</Text>
+          onPress={handleCancel}
+          style={({ pressed }) => [styles.backBtn, { opacity: pressed ? 0.5 : 1 }]}>
+          <Feather name="chevron-left" size={22} color={colors.text} />
+          <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
         </Pressable>
-
         <Text style={[styles.navTitle, { color: colors.text }]}>Application Form</Text>
-        
-        {/* Theme Toggle Switch */}
-        <Pressable onPress={toggleTheme} style={styles.themeSwitch}>
-          <View style={[styles.themeSwitchTrack, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
-            <View style={[
-              styles.themeSwitchThumb,
-              { 
-                backgroundColor: colors.text,
-                transform: [{ translateX: theme === 'dark' ? 24 : 0 }]
-              }
-            ]} />
-            <View style={styles.themeSwitchLabels}>
-              <Text style={[styles.themeSwitchLabel, { color: theme === 'light' ? colors.surface : colors.textSecondary }]}>☀️</Text>
-              <Text style={[styles.themeSwitchLabel, { color: theme === 'dark' ? colors.surface : colors.textSecondary }]}>🌙</Text>
-            </View>
-          </View>
-        </Pressable>
+        <View style={styles.navSpacer} />
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-
+        behavior="padding"
+        style={[styles.keyboardAvoidingView, { backgroundColor: colors.background }]}
+        keyboardVerticalOffset={0}>
         <ScrollView
           ref={scrollViewRef}
           style={styles.scrollView}
@@ -233,162 +208,95 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
 
-          <View style={styles.formSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal Information</Text>
-            
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text style={[styles.label, { color: colors.text }]}>Full Name</Text>
-                {nameError ? (
-                  <Text style={[styles.errorInline, { color: colors.text }]}>{nameError}</Text>
-                ) : null}
-              </View>
-              <TextInput
-                style={[
-                  styles.input,
-                  { 
-                    backgroundColor: colors.surface, 
-                    color: colors.text, 
-                    borderColor: nameError ? colors.text : colors.border 
-                  },
-                ]}
-                placeholder="John Doe"
-                placeholderTextColor={colors.placeholder}
-                value={name}
-                onChangeText={(text) => {
-                  setName(text);
-                  if (nameError) setNameError('');
-                }}
-                autoCapitalize="words"
-                returnKeyType="next"
-                onSubmitEditing={() => emailInputRef.current?.focus()}
-                onFocus={() => scrollToInput(0)}
-              />
-            </View>
+          {/* Personal Information */}
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Personal Information</Text>
 
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text style={[styles.label, { color: colors.text }]}>Email Address</Text>
-                {emailError ? (
-                  <Text style={[styles.errorInline, { color: colors.text }]}>{emailError}</Text>
-                ) : null}
-              </View>
-              <TextInput
-                ref={emailInputRef}
-                style={[
-                  styles.input,
-                  { 
-                    backgroundColor: colors.surface, 
-                    color: colors.text, 
-                    borderColor: emailError ? colors.text : colors.border 
-                  },
-                ]}
-                placeholder="john@example.com"
-                placeholderTextColor={colors.placeholder}
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (emailError) setEmailError('');
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-                onSubmitEditing={() => contactInputRef.current?.focus()}
-                onFocus={() => scrollToInput(120)}
-              />
-            </View>
+          {renderField('Full Name', nameError,
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: nameError ? colors.text : colors.border }]}
+              placeholder="John Doe"
+              placeholderTextColor={colors.placeholder}
+              value={name}
+              onChangeText={(text) => { setName(text); if (nameError) setNameError(''); }}
+              autoCapitalize="words"
+              returnKeyType="next"
+              onSubmitEditing={() => emailInputRef.current?.focus()}
+              onFocus={() => scrollToInput(0)}
+            />
+          )}
 
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text style={[styles.label, { color: colors.text }]}>Contact Number</Text>
-                {contactError ? (
-                  <Text style={[styles.errorInline, { color: colors.text }]}>{contactError}</Text>
-                ) : null}
-              </View>
-              <TextInput
-                ref={contactInputRef}
-                style={[
-                  styles.input,
-                  { 
-                    backgroundColor: colors.surface, 
-                    color: colors.text, 
-                    borderColor: contactError ? colors.text : colors.border 
-                  },
-                ]}
-                placeholder="+1 (555) 000-0000"
-                placeholderTextColor={colors.placeholder}
-                value={contactNumber}
-                onChangeText={(text) => {
-                  setContactNumber(text);
-                  if (contactError) setContactError('');
-                }}
-                keyboardType="phone-pad"
-                returnKeyType="next"
-                onSubmitEditing={() => whyHireYouInputRef.current?.focus()}
-                onFocus={() => scrollToInput(240)}
-              />
-            </View>
-          </View>
+          {renderField('Email Address', emailError,
+            <TextInput
+              ref={emailInputRef}
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: emailError ? colors.text : colors.border }]}
+              placeholder="john@example.com"
+              placeholderTextColor={colors.placeholder}
+              value={email}
+              onChangeText={(text) => { setEmail(text); if (emailError) setEmailError(''); }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={() => contactInputRef.current?.focus()}
+              onFocus={() => scrollToInput(120)}
+            />
+          )}
+
+          {renderField('Contact Number', contactError,
+            <TextInput
+              ref={contactInputRef}
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: contactError ? colors.text : colors.border }]}
+              placeholder="+63 123-4567-890"
+              placeholderTextColor={colors.placeholder}
+              value={contactNumber}
+              onChangeText={(text) => { setContactNumber(text); if (contactError) setContactError(''); }}
+              keyboardType="phone-pad"
+              returnKeyType="next"
+              onSubmitEditing={() => whyHireYouInputRef.current?.focus()}
+              onFocus={() => scrollToInput(240)}
+            />
+          )}
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-          <View style={styles.formSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Application Details</Text>
-            
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text style={[styles.label, { color: colors.text }]}>Why should we hire you?</Text>
-                {whyHireYouError ? (
-                  <Text style={[styles.errorInline, { color: colors.text }]}>{whyHireYouError}</Text>
-                ) : null}
-              </View>
+          {/* Application Details */}
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Application Details</Text>
+
+          {renderField('Why should we hire you?', whyHireYouError,
+            <>
               <TextInput
                 ref={whyHireYouInputRef}
-                style={[
-                  styles.input,
-                  styles.textArea,
-                  { 
-                    backgroundColor: colors.surface, 
-                    color: colors.text, 
-                    borderColor: whyHireYouError ? colors.text : colors.border 
-                  },
-                ]}
+                style={[styles.input, styles.textArea, { backgroundColor: colors.surface, color: colors.text, borderColor: whyHireYouError ? colors.text : colors.border }]}
                 placeholder="Tell us about your skills and experience..."
                 placeholderTextColor={colors.placeholder}
                 value={whyHireYou}
-                onChangeText={(text) => {
-                  setWhyHireYou(text);
-                  if (whyHireYouError) setWhyHireYouError('');
-                }}
+                onChangeText={(text) => { setWhyHireYou(text); if (whyHireYouError) setWhyHireYouError(''); }}
                 multiline
                 numberOfLines={6}
                 textAlignVertical="top"
                 onFocus={() => scrollToInput(500)}
               />
               <Text style={[styles.charCount, { color: colors.textSecondary }]}>
-                {whyHireYou.length}/20 minimum
+                {whyHireYou.length} / 20 minimum
               </Text>
-            </View>
+            </>
+          )}
+
+          {/* Actions */}
+          <View style={styles.actions}>
+            <Pressable
+              style={({ pressed }) => [styles.submitBtn, { backgroundColor: colors.text, opacity: pressed ? 0.6 : 1 }]}
+              onPress={handleSubmit}>
+              <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submit Application</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.cancelBtn, { borderColor: colors.border, opacity: pressed ? 0.6 : 1 }]}
+              onPress={handleCancel}>
+              <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
+            </Pressable>
           </View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.submitButton,
-              { backgroundColor: colors.primary, opacity: pressed ? 0.6 : 1 },
-            ]}
-            onPress={handleSubmit}>
-            <Text style={[styles.submitButtonText, { color: colors.surface }]}>Submit Application</Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.cancelButton,
-              { borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
-            ]}
-            onPress={handleCancel}>
-            <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel & Return</Text>
-          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -399,65 +307,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // NAVIGATION BAR
-  navbar: {
+  // NAV
+  nav: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     borderBottomWidth: 1,
   },
-  backButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    width: 110,
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    width: 80,
   },
-  backButtonText: {
+  backText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   navTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '600',
-    letterSpacing: -0.3,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  // THEME SWITCH
-  themeSwitch: {
-    padding: 4,
-    zIndex: 1,
+  navSpacer: {
+    width: 80,
   },
-  themeSwitchTrack: {
-    width: 64,
-    height: 32,
-    borderRadius: 16,
-    padding: 2,
-    borderWidth: 1,
-    position: 'relative',
-  },
-  themeSwitchThumb: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    position: 'absolute',
-    top: 1,
-    left: 1,
-  },
-  themeSwitchLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    height: '100%',
-  },
-  themeSwitchLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
+  // FORM
   keyboardAvoidingView: {
     flex: 1,
   },
@@ -465,21 +342,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: 20,
     paddingBottom: 40,
   },
-  formSection: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 15,
+  sectionLabel: {
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 16,
-    letterSpacing: 0.3,
     textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 16,
+    marginTop: 8,
   },
   formGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   labelRow: {
     flexDirection: 'row',
@@ -509,32 +384,36 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 12,
     marginTop: 6,
+    textAlign: 'right',
   },
   divider: {
     height: 1,
-    marginVertical: 8,
+    marginVertical: 20,
   },
-  submitButton: {
-    height: 50,
+  actions: {
+    gap: 12,
+    marginTop: 8,
+  },
+  submitBtn: {
+    height: 52,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
   },
-  submitButtonText: {
+  submitBtnText: {
     fontSize: 15,
     fontWeight: '600',
-    letterSpacing: 0.3,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  cancelButton: {
-    height: 50,
+  cancelBtn: {
+    height: 52,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
   },
-  cancelButtonText: {
+  cancelBtnText: {
     fontSize: 15,
     fontWeight: '500',
   },
