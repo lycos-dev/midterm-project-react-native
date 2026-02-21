@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -11,17 +11,18 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Image,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { CommonActions } from '@react-navigation/native';
-import uuid from 'react-native-uuid';
-import { useSavedJobs } from '../context/SavedJobsContext';
-import { useTheme } from '../context/ThemeContext';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/types";
+import { CommonActions } from "@react-navigation/native";
+import uuid from "react-native-uuid";
+import { useSavedJobs } from "../context/SavedJobsContext";
+import { useTheme } from "../context/ThemeContext";
+import BottomTabBar from "../components/BottomTabBar";
 
 type JobFinderScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'JobFinder'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, "JobFinder">;
 };
 
 interface Job {
@@ -34,14 +35,23 @@ interface Job {
 }
 
 const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const JOBS_PER_PAGE = 10;
+
+  const flatListRef = useRef<FlatList>(null);
 
   const { saveJob, isJobSaved, savedJobs } = useSavedJobs();
-  const { colors, theme, toggleTheme } = useTheme();
+  const { colors } = useTheme();
+
+  useEffect(() => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [currentPage]);
 
   useEffect(() => {
     fetchJobs();
@@ -55,17 +65,17 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch('https://empllo.com/api/v1');
-      
+
+      const response = await fetch("https://empllo.com/api/v1");
+
       if (!response.ok) {
-        throw new Error('Failed to fetch jobs');
+        throw new Error("Failed to fetch jobs");
       }
-      
+
       const data = await response.json();
-      
+
       let jobsArray = [];
-      
+
       if (Array.isArray(data)) {
         jobsArray = data;
       } else if (data.jobs && Array.isArray(data.jobs)) {
@@ -75,51 +85,71 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
       } else {
         jobsArray = Object.values(data);
       }
-      
-      const transformedJobs: Job[] = jobsArray.map((job: any, index: number) => {
-        const title = job.title || job.job_title || job.position || 'No Title';
-        const company = job.companyName || job.company || job.company_name || job.employer || 'Unknown Company';
-        
-        const stableId = `${company}-${title}-${index}`.replace(/\s+/g, '-').toLowerCase();
-        
-        // Extract salary with proper handling of minSalary, maxSalary, and currency
-        let salaryText = 'Negotiable';
-        if (job.minSalary && job.maxSalary && job.currency) {
-          salaryText = `${job.currency} ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}`;
-        } else if (job.minSalary && job.currency) {
-          salaryText = `${job.currency} ${job.minSalary.toLocaleString()}`;
-        } else if (job.salary || job.salary_range || job.pay) {
-          salaryText = job.salary || job.salary_range || job.pay;
-        }
-        
-        // Extract location from locations array
-        let locationText = 'Location not specified';
-        if (job.locations && Array.isArray(job.locations) && job.locations.length > 0) {
-          locationText = job.locations.join(', ');
-        } else if (job.location || job.city || job.address) {
-          locationText = job.location || job.city || job.address;
-        }
-        
-        return {
-          id: stableId,
-          title: title,
-          company: company,
-          salary: salaryText,
-          location: locationText,
-          logo: job.companyLogo || job.logo || job.company_logo || job.image || undefined,
-        };
-      });
-      
+
+      const transformedJobs: Job[] = jobsArray.map(
+        (job: any, index: number) => {
+          const title =
+            job.title || job.job_title || job.position || "No Title";
+          const company =
+            job.companyName ||
+            job.company ||
+            job.company_name ||
+            job.employer ||
+            "Unknown Company";
+
+          const stableId = `${company}-${title}-${index}`
+            .replace(/\s+/g, "-")
+            .toLowerCase();
+
+          // Extract salary with proper handling of minSalary, maxSalary, and currency
+          let salaryText = "Negotiable";
+          if (job.minSalary && job.maxSalary && job.currency) {
+            salaryText = `${job.currency} ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}`;
+          } else if (job.minSalary && job.currency) {
+            salaryText = `${job.currency} ${job.minSalary.toLocaleString()}`;
+          } else if (job.salary || job.salary_range || job.pay) {
+            salaryText = job.salary || job.salary_range || job.pay;
+          }
+
+          // Extract location from locations array
+          let locationText = "Location not specified";
+          if (
+            job.locations &&
+            Array.isArray(job.locations) &&
+            job.locations.length > 0
+          ) {
+            locationText = job.locations.join(", ");
+          } else if (job.location || job.city || job.address) {
+            locationText = job.location || job.city || job.address;
+          }
+
+          return {
+            id: stableId,
+            title: title,
+            company: company,
+            salary: salaryText,
+            location: locationText,
+            logo:
+              job.companyLogo ||
+              job.logo ||
+              job.company_logo ||
+              job.image ||
+              undefined,
+          };
+        },
+      );
+
       setJobs(transformedJobs);
       setFilteredJobs(transformedJobs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   const filterJobs = () => {
+    setCurrentPage(1);
     if (!searchQuery.trim()) {
       setFilteredJobs(jobs);
       return;
@@ -127,59 +157,67 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
 
     const query = searchQuery.toLowerCase();
     const filtered = jobs.filter((job) =>
-      job.title.toLowerCase().includes(query)
+      job.title.toLowerCase().includes(query),
     );
     setFilteredJobs(filtered);
   };
 
+  const totalPages = Math.ceil(filteredJobs.length / JOBS_PER_PAGE);
+  const paginatedJobs = filteredJobs.slice(
+    (currentPage - 1) * JOBS_PER_PAGE,
+    currentPage * JOBS_PER_PAGE,
+  );
+
   const handleSaveJob = (job: Job) => {
     if (!isJobSaved(job.id)) {
-      Alert.alert(
-        'Save Job',
-        `Save "${job.title}" at ${job.company}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Save',
-            onPress: () => {
-              saveJob(job);
-              console.log(`Job saved - ID: ${job.id}, Title: ${job.title}`);
-            },
+      Alert.alert("Save Job", `Save "${job.title}" at ${job.company}?`, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Save",
+          onPress: () => {
+            saveJob(job);
+            console.log(`Job saved - ID: ${job.id}, Title: ${job.title}`);
           },
-        ]
-      );
+        },
+      ]);
     }
   };
 
   const handleApply = () => {
-    navigation.navigate('ApplicationForm', { fromScreen: 'JobFinder' });
-  };
-
-  const navigateToSavedJobs = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'SavedJobs' }],
-      })
-    );
+    navigation.navigate("ApplicationForm", { fromScreen: "JobFinder" });
   };
 
   const renderJobItem = ({ item }: { item: Job }) => {
     const isSaved = isJobSaved(item.id);
 
     return (
-      <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.jobCard,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         <View style={styles.jobHeader}>
           {/* Logo */}
-          <View style={[styles.logoContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.logoContainer,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             {item.logo ? (
-              <Image 
-                source={{ uri: item.logo }} 
+              <Image
+                source={{ uri: item.logo }}
                 style={styles.logo}
                 resizeMode="contain"
               />
             ) : (
-              <Text style={[styles.logoPlaceholder, { color: colors.textSecondary }]}>
+              <Text
+                style={[
+                  styles.logoPlaceholder,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 {item.company.charAt(0).toUpperCase()}
               </Text>
             )}
@@ -188,25 +226,49 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
           {/* Job Info */}
           <View style={styles.jobHeaderContent}>
             <View style={styles.jobHeaderLeft}>
-              <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
-              <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
+              <Text style={[styles.jobTitle, { color: colors.text }]}>
+                {item.title}
+              </Text>
+              <Text
+                style={[styles.jobCompany, { color: colors.textSecondary }]}
+              >
+                {item.company}
+              </Text>
             </View>
             {isSaved && (
-              <View style={[styles.savedIndicator, { borderColor: colors.border }]}>
-                <View style={[styles.savedDot, { backgroundColor: colors.text }]} />
+              <View
+                style={[styles.savedIndicator, { borderColor: colors.border }]}
+              >
+                <View
+                  style={[styles.savedDot, { backgroundColor: colors.text }]}
+                />
               </View>
             )}
           </View>
         </View>
-        
+
         <View style={styles.jobInfo}>
           <View style={styles.infoItem}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Salary</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>{item.salary}</Text>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+              Salary
+            </Text>
+            <Text
+              style={[styles.infoValue, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              {item.salary}
+            </Text>
           </View>
           <View style={styles.infoItem}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Location</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>{item.location}</Text>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+              Location
+            </Text>
+            <Text
+              style={[styles.infoValue, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              {item.location}
+            </Text>
           </View>
         </View>
 
@@ -214,16 +276,17 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
           <Pressable
             style={({ pressed }) => [
               styles.actionBtn,
-              { 
+              {
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
-                opacity: isSaved ? 0.5 : (pressed ? 0.5 : 1),
+                opacity: isSaved ? 0.5 : pressed ? 0.5 : 1,
               },
             ]}
             onPress={() => handleSaveJob(item)}
-            disabled={isSaved}>
+            disabled={isSaved}
+          >
             <Text style={[styles.actionText, { color: colors.text }]}>
-              {isSaved ? 'Saved' : 'Save'}
+              {isSaved ? "Saved" : "Save"}
             </Text>
           </Pressable>
 
@@ -233,8 +296,11 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
               styles.primaryAction,
               { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
             ]}
-            onPress={handleApply}>
-            <Text style={[styles.actionText, { color: colors.surface }]}>Apply</Text>
+            onPress={handleApply}
+          >
+            <Text style={[styles.actionText, { color: colors.surface }]}>
+              Apply
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -246,7 +312,9 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
       return (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.text} />
-          <Text style={[styles.statusText, { color: colors.textSecondary }]}>Loading jobs...</Text>
+          <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+            Loading jobs...
+          </Text>
         </View>
       );
     }
@@ -255,14 +323,19 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
       return (
         <View style={styles.centerContainer}>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>Error</Text>
-          <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>{error}</Text>
-          <Pressable 
+          <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
+            {error}
+          </Text>
+          <Pressable
             style={({ pressed }) => [
               styles.retryBtn,
               { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
             ]}
-            onPress={fetchJobs}>
-            <Text style={[styles.retryText, { color: colors.surface }]}>Retry</Text>
+            onPress={fetchJobs}
+          >
+            <Text style={[styles.retryText, { color: colors.surface }]}>
+              Retry
+            </Text>
           </Pressable>
         </View>
       );
@@ -271,9 +344,13 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
     if (filteredJobs.length === 0) {
       return (
         <View style={styles.centerContainer}>
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Jobs Found</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>
+            No Jobs Found
+          </Text>
           <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
-            {searchQuery ? `No results for "${searchQuery}"` : 'No jobs available'}
+            {searchQuery
+              ? `No results for "${searchQuery}"`
+              : "No jobs available"}
           </Text>
         </View>
       );
@@ -281,48 +358,109 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
 
     return (
       <FlatList
-        data={filteredJobs}
+        ref={flatListRef}
+        data={paginatedJobs}
         renderItem={renderJobItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          totalPages > 1 ? (
+            <View style={styles.pagination}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.pageBtn,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    opacity: currentPage === 1 ? 0.4 : pressed ? 0.6 : 1,
+                  },
+                ]}
+                onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <Text style={[styles.pageBtnText, { color: colors.text }]}>
+                  ← Prev
+                </Text>
+              </Pressable>
+
+              <Text
+                style={[styles.pageIndicator, { color: colors.textSecondary }]}
+              >
+                {currentPage} / {totalPages}
+              </Text>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.pageBtn,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    opacity:
+                      currentPage === totalPages ? 0.4 : pressed ? 0.6 : 1,
+                  },
+                ]}
+                onPress={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                <Text style={[styles.pageBtnText, { color: colors.text }]}>
+                  Next →
+                </Text>
+              </Pressable>
+            </View>
+          ) : null
+        }
       />
     );
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "bottom"]}
+    >
       <View style={{ flex: 1 }}>
         {/* NAV */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={[styles.nav, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-            <Text style={[styles.navTitle, { color: colors.text }]}>Job Finder</Text>
-            
-            <Pressable onPress={toggleTheme} style={styles.themeBtn}>
-              {({ pressed }) => (
-                <View style={[styles.themeTrack, { backgroundColor: colors.border, opacity: pressed ? 0.5 : 1 }]}>
-                  <View style={[
-                    styles.themeThumb,
-                    { 
-                      backgroundColor: colors.text,
-                      transform: [{ translateX: theme === 'dark' ? 34 : 0 }]
-                    }
-                  ]} />
-                  <View style={styles.themeIcons}>
-                    <Text style={[styles.sunIcon, { color: colors.text, opacity: theme === 'light' ? 1 : 0.3 }]}>☼</Text>
-                    <Text style={[styles.themeIcon, { color: colors.text, opacity: theme === 'dark' ? 1 : 0.3 }]}>☾</Text>
-                  </View>
-                </View>
-              )}
-            </Pressable>
+          <View
+            style={[
+              styles.nav,
+              {
+                backgroundColor: colors.background,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.navTitle, { color: colors.text }]}>
+              Job Finder
+            </Text>
           </View>
         </TouchableWithoutFeedback>
 
         {/* SEARCH */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={[styles.searchSection, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-            <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>⌕</Text>
+          <View
+            style={[
+              styles.searchSection,
+              {
+                backgroundColor: colors.background,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.searchBox,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <Text
+                style={[styles.searchIcon, { color: colors.textSecondary }]}
+              >
+                ⌕
+              </Text>
               <TextInput
                 style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Search jobs..."
@@ -332,31 +470,14 @@ const JobFinderScreen: React.FC<JobFinderScreenProps> = ({ navigation }) => {
               />
             </View>
             <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
-              {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
+              {filteredJobs.length} {filteredJobs.length === 1 ? "job" : "jobs"}
             </Text>
           </View>
         </TouchableWithoutFeedback>
 
         {renderContent()}
 
-        {/* BOTTOM */}
-        <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-          <Pressable
-            onPress={navigateToSavedJobs}
-            style={({ pressed }) => [
-              styles.savedBtn,
-              { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }
-            ]}>
-            <Text style={[styles.savedBtnText, { color: colors.surface }]}>
-              Saved Jobs
-            </Text>
-            {savedJobs.length > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.text }]}>
-              <Text style={[styles.badgeText, { color: colors.text }]}>{savedJobs.length}</Text>
-            </View>
-          )}
-        </Pressable>
-      </View>
+        <BottomTabBar activeTab="JobFinder" navigation={navigation} />
       </View>
     </SafeAreaView>
   );
@@ -368,52 +489,17 @@ const styles = StyleSheet.create({
   },
   // NAV
   nav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
   },
   navTitle: {
     fontSize: 22,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: -0.5,
-  },
-  // THEME
-  themeBtn: {
-    padding: 4,
-  },
-  themeTrack: {
-    width: 68,
-    height: 34,
-    borderRadius: 17,
-    padding: 3,
-    position: 'relative',
-  },
-  themeThumb: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    position: 'absolute',
-    top: 3,
-    left: 3,
-  },
-  themeIcons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingLeft: 6,
-    paddingRight: 8,
-    height: '100%',
-  },
-  sunIcon: {
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  themeIcon: {
-    fontSize: 14,
-    fontWeight: '400',
   },
   // SEARCH
   searchSection: {
@@ -423,8 +509,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     height: 44,
     borderRadius: 8,
     paddingHorizontal: 14,
@@ -444,8 +530,8 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 40,
   },
   statusText: {
@@ -454,12 +540,12 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   emptyMessage: {
     fontSize: 15,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
   },
   retryBtn: {
@@ -469,11 +555,10 @@ const styles = StyleSheet.create({
   },
   retryText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   list: {
     padding: 20,
-    paddingBottom: 100,
   },
   jobCard: {
     borderRadius: 6,
@@ -482,7 +567,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   jobHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 16,
     gap: 12,
   },
@@ -491,23 +576,23 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 8,
     borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
   logo: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   logoPlaceholder: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   jobHeaderContent: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   jobHeaderLeft: {
     flex: 1,
@@ -515,7 +600,7 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
     letterSpacing: -0.3,
   },
@@ -527,8 +612,8 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   savedDot: {
     width: 10,
@@ -540,30 +625,30 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   infoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   infoLabel: {
     fontSize: 13,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   actionBtn: {
     flex: 1,
     height: 44,
     borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
   },
   primaryAction: {
@@ -571,44 +656,31 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: "600",
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  // BOTTOM
-  bottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    borderTopWidth: 1,
+  // PAGINATION
+  pagination: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    marginBottom: 16,
   },
-  savedBtn: {
-    height: 52,
+  pageBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
     borderRadius: 6,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
+    borderWidth: 1,
   },
-  savedBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+  pageBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
-  badge: {
-    minWidth: 24,
-    height: 24,
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
+  pageIndicator: {
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
 

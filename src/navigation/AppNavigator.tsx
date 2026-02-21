@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
 import JobFinderScreen from '../screens/JobFinderScreen';
 import SavedJobsScreen from '../screens/SavedJobsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import ApplicationFormScreen from '../screens/ApplicationFormScreen';
 import { useTheme } from '../context/ThemeContext';
 
@@ -30,6 +31,7 @@ const AppNavigator = () => {
         }}>
         <Stack.Screen name="JobFinder" component={JobFinderScreen} />
         <Stack.Screen name="SavedJobs" component={SavedJobsScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="ApplicationForm" component={ApplicationFormScreen} />
       </Stack.Navigator>
     </NavigationContainer>

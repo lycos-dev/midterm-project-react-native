@@ -15,6 +15,7 @@ import { RootStackParamList } from '../navigation/types';
 import { CommonActions } from '@react-navigation/native';
 import { useSavedJobs } from '../context/SavedJobsContext';
 import { useTheme } from '../context/ThemeContext';
+import BottomTabBar from '../components/BottomTabBar';
 
 type SavedJobsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SavedJobs'>;
@@ -30,7 +31,7 @@ interface Job {
 
 const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   const { savedJobs, unsaveJob } = useSavedJobs();
-  const { colors, theme, toggleTheme } = useTheme();
+  const { colors } = useTheme();
 
   const navigateToJobFinder = () => {
     navigation.dispatch(
@@ -139,31 +140,7 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
         {/* NAV */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={[styles.nav, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-            <Pressable onPress={navigateToJobFinder} style={styles.backBtn}>
-              {({ pressed }) => (
-                <Text style={[styles.backText, { color: colors.text, opacity: pressed ? 0.5 : 1 }]}>← Back</Text>
-              )}
-            </Pressable>
-
             <Text style={[styles.navTitle, { color: colors.text }]}>Saved Jobs</Text>
-            
-            <Pressable onPress={toggleTheme} style={styles.themeBtn}>
-              {({ pressed }) => (
-                <View style={[styles.themeTrack, { backgroundColor: colors.border, opacity: pressed ? 0.5 : 1 }]}>
-                  <View style={[
-                    styles.themeThumb,
-                    { 
-                      backgroundColor: colors.text,
-                      transform: [{ translateX: theme === 'dark' ? 34 : 0 }]
-                    }
-                  ]} />
-                  <View style={styles.themeIcons}>
-                    <Text style={[styles.sunIcon, { color: colors.text, opacity: theme === 'light' ? 1 : 0.3 }]}>☼</Text>
-                    <Text style={[styles.themeIcon, { color: colors.text, opacity: theme === 'dark' ? 1 : 0.3 }]}>☾</Text>
-                  </View>
-                </View>
-              )}
-            </Pressable>
           </View>
         </TouchableWithoutFeedback>
 
@@ -189,6 +166,8 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
           />
         )}
+
+        <BottomTabBar activeTab="SavedJobs" navigation={navigation} />
       </View>
     </SafeAreaView>
   );
@@ -200,67 +179,14 @@ const styles = StyleSheet.create({
   },
   // NAV
   nav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-  },
-  backBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginLeft: -8,
-    width: 100,
-  },
-  backText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   navTitle: {
     fontSize: 22,
     fontWeight: '600',
     letterSpacing: -0.5,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-  },
-  // THEME
-  themeBtn: {
-    padding: 4,
-    zIndex: 1,
-  },
-  themeTrack: {
-    width: 68,
-    height: 34,
-    borderRadius: 17,
-    padding: 3,
-    position: 'relative',
-  },
-  themeThumb: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    position: 'absolute',
-    top: 3,
-    left: 3,
-  },
-  themeIcons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingLeft: 6,
-    paddingRight: 8,
-    height: '100%',
-  },
-  sunIcon: {
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  themeIcon: {
-    fontSize: 14,
-    fontWeight: '400',
   },
   // SUBTITLE
   subtitle: {
