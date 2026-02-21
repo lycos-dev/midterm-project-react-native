@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
@@ -12,6 +13,12 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, any>;
 };
 
+const tabs: { key: ActiveTab; label: string; icon: keyof typeof Feather.glyphMap }[] = [
+  { key: 'JobFinder',  label: 'Home',     icon: 'home' },
+  { key: 'SavedJobs', label: 'Saved',     icon: 'bookmark' },
+  { key: 'Settings',  label: 'Settings',  icon: 'settings' },
+];
+
 const BottomTabBar: React.FC<Props> = ({ activeTab, navigation }) => {
   const { colors } = useTheme();
 
@@ -22,16 +29,11 @@ const BottomTabBar: React.FC<Props> = ({ activeTab, navigation }) => {
     );
   };
 
-  const tabs: { key: ActiveTab; label: string; icon: string }[] = [
-    { key: 'JobFinder',  label: 'Home',     icon: '⌂' },
-    { key: 'SavedJobs', label: 'Saved',     icon: '♡' },
-    { key: 'Settings',  label: 'Settings',  icon: '⚙' },
-  ];
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
+        const color = isActive ? colors.text : colors.textSecondary;
         return (
           <Pressable
             key={tab.key}
@@ -40,16 +42,8 @@ const BottomTabBar: React.FC<Props> = ({ activeTab, navigation }) => {
             {isActive && (
               <View style={[styles.activeIndicator, { backgroundColor: colors.text }]} />
             )}
-            <Text style={[styles.icon, { color: isActive ? colors.text : colors.textSecondary }]}>
-              {tab.icon}
-            </Text>
-            <Text style={[
-              styles.label,
-              {
-                color: isActive ? colors.text : colors.textSecondary,
-                fontWeight: isActive ? '600' : '400',
-              },
-            ]}>
+            <Feather name={tab.icon} size={20} color={color} />
+            <Text style={[styles.label, { color, fontWeight: isActive ? '600' : '400' }]}>
               {tab.label}
             </Text>
           </Pressable>
@@ -72,11 +66,8 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     gap: 4,
   },
-  icon: {
-    fontSize: 22,
-  },
   label: {
-    fontSize: 12,
+    fontSize: 11,
     letterSpacing: 0.2,
   },
   activeIndicator: {

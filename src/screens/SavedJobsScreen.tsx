@@ -6,6 +6,7 @@ import {
   Pressable,
   FlatList,
   Alert,
+  Image,
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
@@ -13,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { CommonActions } from '@react-navigation/native';
+import { Feather } from '@expo/vector-icons';
 import { useSavedJobs } from '../context/SavedJobsContext';
 import { useTheme } from '../context/ThemeContext';
 import BottomTabBar from '../components/BottomTabBar';
@@ -27,6 +29,7 @@ interface Job {
   company: string;
   salary: string;
   location: string;
+  logo?: string;
 }
 
 const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
@@ -67,15 +70,30 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
   const renderJobItem = ({ item }: { item: Job }) => (
     <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.jobHeader}>
-        <View style={styles.jobHeaderLeft}>
-          <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
-          <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
+        {/* Logo */}
+        <View style={[styles.logoContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {item.logo ? (
+            <Image
+              source={{ uri: item.logo }}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          ) : (
+            <Text style={[styles.logoPlaceholder, { color: colors.textSecondary }]}>
+              {item.company.charAt(0).toUpperCase()}
+            </Text>
+          )}
         </View>
-        <View style={[styles.savedIndicator, { borderColor: colors.border }]}>
-          <View style={[styles.savedDot, { backgroundColor: colors.text }]} />
+
+        {/* Job Info */}
+        <View style={styles.jobHeaderContent}>
+          <View style={styles.jobHeaderLeft}>
+            <Text style={[styles.jobTitle, { color: colors.text }]}>{item.title}</Text>
+            <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{item.company}</Text>
+          </View>
         </View>
       </View>
-      
+
       <View style={styles.jobInfo}>
         <View style={styles.infoItem}>
           <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Salary</Text>
@@ -101,13 +119,10 @@ const SavedJobsScreen: React.FC<SavedJobsScreenProps> = ({ navigation }) => {
         <Pressable
           style={({ pressed }) => [
             styles.actionBtn,
-            { 
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              opacity: pressed ? 0.5 : 1,
-            },
+            { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 },
           ]}
           onPress={() => handleRemoveJob(item.id, item.title, item.company)}>
+          <Feather name="trash-2" size={13} color={colors.text} />
           <Text style={[styles.actionText, { color: colors.text }]}>Remove</Text>
         </Pressable>
       </View>
@@ -208,13 +223,32 @@ const styles = StyleSheet.create({
   },
   jobHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: 16,
+    gap: 12,
+  },
+  logoContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
+  },
+  logoPlaceholder: {
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  jobHeaderContent: {
+    flex: 1,
+    justifyContent: 'center',
   },
   jobHeaderLeft: {
     flex: 1,
-    paddingRight: 12,
   },
   jobTitle: {
     fontSize: 18,
@@ -224,19 +258,6 @@ const styles = StyleSheet.create({
   },
   jobCompany: {
     fontSize: 15,
-  },
-  savedIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  savedDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
   },
   jobInfo: {
     marginBottom: 16,
@@ -265,8 +286,10 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderRadius: 6,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 5,
     borderWidth: 1,
   },
   primaryAction: {

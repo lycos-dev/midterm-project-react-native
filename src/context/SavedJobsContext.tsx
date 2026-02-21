@@ -6,6 +6,7 @@ interface Job {
   company: string;
   salary: string;
   location: string;
+  logo?: string;
 }
 
 interface SavedJobsContextType {
