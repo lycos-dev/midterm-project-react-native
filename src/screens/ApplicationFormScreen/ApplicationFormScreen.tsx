@@ -133,11 +133,12 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
             icon: 'check-circle',
             title: 'Application Submitted!',
             message: 'Your application has been submitted successfully. We will get back to you soon!',
-            confirmLabel: 'Done',
+            confirmLabel: 'Okay',
             onConfirm: () => {
               setModal(null);
               clearForm();
-              goBack();
+              // Always redirect to Job Finder after submission
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'JobFinder' }] }));
             },
           });
         }, 300);
@@ -303,7 +304,6 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
         onClose={() => setShowCountryPicker(false)}
       />
 
-      {/* Unified App Modal */}
       <Modal
         visible={!!modal}
         transparent

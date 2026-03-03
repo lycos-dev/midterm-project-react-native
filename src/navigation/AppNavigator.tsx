@@ -7,7 +7,7 @@ import { RootStackParamList } from "./types";
 import { useTheme } from "../context/ThemeContext";
 import JobFinderScreen from "../screens/JobFinderScreen/JobFinderScreen";
 import SavedJobsScreen from "../screens/SavedJobsScreen/SavedJobsScreen";
-import SettingsScreen from "../screens/SettingScreen/SettingsScreen";
+import SettingsScreen from "../screens/SettingsScreen/SettingsScreen";
 import ApplicationFormScreen from "../screens/ApplicationFormScreen/ApplicationFormScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

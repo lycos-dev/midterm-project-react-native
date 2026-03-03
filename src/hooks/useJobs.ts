@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
+import uuid from 'react-native-uuid';
 import { Job } from '../types/Job';
 
-const transformJob = (job: any, index: number): Job => {
+const transformJob = (job: any): Job => {
   const title = job.title || job.job_title || job.position || 'No Title';
   const company = job.companyName || job.company || job.company_name || job.employer || 'Unknown Company';
-  const stableId = `${company}-${title}-${index}`.replace(/\s+/g, '-').toLowerCase();
 
   let salary = 'Negotiable';
   if (job.minSalary && job.maxSalary && job.currency) {
@@ -23,7 +23,7 @@ const transformJob = (job: any, index: number): Job => {
   }
 
   return {
-    id: stableId,
+    id: uuid.v4() as string,
     title,
     company,
     salary,
