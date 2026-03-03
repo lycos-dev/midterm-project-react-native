@@ -8,6 +8,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Alert,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -22,6 +24,30 @@ type ApplicationFormScreenProps = {
   route: RouteProp<RootStackParamList, 'ApplicationForm'>;
 };
 
+// Country data with phone validation rules
+interface CountryData {
+  name: string;
+  code: string;
+  dialCode: string;
+  minLength: number;
+  maxLength: number;
+  placeholder: string;
+  flag: string;
+}
+
+const COUNTRIES: CountryData[] = [
+  { name: 'Philippines', code: 'PH', dialCode: '+63', minLength: 10, maxLength: 10, placeholder: '912 345 6789', flag: '🇵🇭' },
+  { name: 'United States', code: 'US', dialCode: '+1', minLength: 10, maxLength: 10, placeholder: '555 123 4567', flag: '🇺🇸' },
+  { name: 'United Kingdom', code: 'GB', dialCode: '+44', minLength: 10, maxLength: 11, placeholder: '7911 123456', flag: '🇬🇧' },
+  { name: 'India', code: 'IN', dialCode: '+91', minLength: 10, maxLength: 10, placeholder: '98765 43210', flag: '🇮🇳' },
+  { name: 'Australia', code: 'AU', dialCode: '+61', minLength: 9, maxLength: 9, placeholder: '412 345 678', flag: '🇦🇺' },
+  { name: 'Canada', code: 'CA', dialCode: '+1', minLength: 10, maxLength: 10, placeholder: '555 123 4567', flag: '🇨🇦' },
+  { name: 'Singapore', code: 'SG', dialCode: '+65', minLength: 8, maxLength: 8, placeholder: '8123 4567', flag: '🇸🇬' },
+  { name: 'Japan', code: 'JP', dialCode: '+81', minLength: 10, maxLength: 10, placeholder: '90 1234 5678', flag: '🇯🇵' },
+  { name: 'South Korea', code: 'KR', dialCode: '+82', minLength: 9, maxLength: 10, placeholder: '10 1234 5678', flag: '🇰🇷' },
+  { name: 'Germany', code: 'DE', dialCode: '+49', minLength: 10, maxLength: 11, placeholder: '151 23456789', flag: '🇩🇪' },
+];
+
 const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   navigation,
   route,
@@ -30,6 +56,8 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
   const [email, setEmail] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [whyHireYou, setWhyHireYou] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<CountryData>(COUNTRIES[0]); // Default to Philippines
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
 
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -58,9 +86,86 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
     return emailRegex.test(email);
   };
 
-  const validateContactNumber = (contact: string): boolean => {
+  const formatPhoneNumber = (text: string, country: CountryData): string => {
+    // Remove all non-digit characters
+    const digitsOnly = text.replace(/\D/g, '');
+    
+    // Limit to max length
+    const limited = digitsOnly.slice(0, country.maxLength);
+    
+    // Auto-format based on country
+    if (country.code === 'PH') {
+      // Philippines: 912 345 6789
+      if (limited.length > 6) {
+        return `${limited.slice(0, 3)} ${limited.slice(3, 6)} ${limited.slice(6)}`;
+      } else if (limited.length > 3) {
+        return `${limited.slice(0, 3)} ${limited.slice(3)}`;
+      }
+      return limited;
+    } else if (country.code === 'US' || country.code === 'CA') {
+      // US/Canada: 555 123 4567
+      if (limited.length > 6) {
+        return `${limited.slice(0, 3)} ${limited.slice(3, 6)} ${limited.slice(6)}`;
+      } else if (limited.length > 3) {
+        return `${limited.slice(0, 3)} ${limited.slice(3)}`;
+      }
+      return limited;
+    } else if (country.code === 'GB') {
+      // UK: 7911 123456
+      if (limited.length > 4) {
+        return `${limited.slice(0, 4)} ${limited.slice(4)}`;
+      }
+      return limited;
+    } else if (country.code === 'IN') {
+      // India: 98765 43210
+      if (limited.length > 5) {
+        return `${limited.slice(0, 5)} ${limited.slice(5)}`;
+      }
+      return limited;
+    } else if (country.code === 'AU') {
+      // Australia: 412 345 678
+      if (limited.length > 6) {
+        return `${limited.slice(0, 3)} ${limited.slice(3, 6)} ${limited.slice(6)}`;
+      } else if (limited.length > 3) {
+        return `${limited.slice(0, 3)} ${limited.slice(3)}`;
+      }
+      return limited;
+    } else if (country.code === 'SG') {
+      // Singapore: 8123 4567
+      if (limited.length > 4) {
+        return `${limited.slice(0, 4)} ${limited.slice(4)}`;
+      }
+      return limited;
+    } else if (country.code === 'JP') {
+      // Japan: 90 1234 5678
+      if (limited.length > 6) {
+        return `${limited.slice(0, 2)} ${limited.slice(2, 6)} ${limited.slice(6)}`;
+      } else if (limited.length > 2) {
+        return `${limited.slice(0, 2)} ${limited.slice(2)}`;
+      }
+      return limited;
+    }
+    
+    // Default formatting
+    return limited;
+  };
+
+  const validateContactNumber = (contact: string, country: CountryData): boolean => {
     const digitsOnly = contact.replace(/\D/g, '');
-    return digitsOnly.length >= 10;
+    return digitsOnly.length >= country.minLength && digitsOnly.length <= country.maxLength;
+  };
+
+  const handleContactChange = (text: string) => {
+    const formatted = formatPhoneNumber(text, selectedCountry);
+    setContactNumber(formatted);
+    if (contactError) setContactError('');
+  };
+
+  const handleCountrySelect = (country: CountryData) => {
+    setSelectedCountry(country);
+    setContactNumber(''); // Clear contact number when country changes
+    setContactError('');
+    setShowCountryPicker(false);
   };
 
   const validateForm = (): boolean => {
@@ -87,8 +192,13 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
     if (!contactNumber.trim()) {
       setContactError('Required');
       isValid = false;
-    } else if (!validateContactNumber(contactNumber)) {
-      setContactError('Minimum 10 digits');
+    } else if (!validateContactNumber(contactNumber, selectedCountry)) {
+      const digitsOnly = contactNumber.replace(/\D/g, '');
+      if (digitsOnly.length < selectedCountry.minLength) {
+        setContactError(`Minimum ${selectedCountry.minLength} digits required`);
+      } else {
+        setContactError(`Maximum ${selectedCountry.maxLength} digits allowed`);
+      }
       isValid = false;
     }
 
@@ -116,9 +226,10 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
 
   const handleSubmit = () => {
     if (validateForm()) {
+      const fullPhone = `${selectedCountry.dialCode} ${contactNumber}`;
       Alert.alert(
         'Submit Application',
-        `Are you sure you want to submit?\n\nName: ${name}\nEmail: ${email}\nContact: ${contactNumber}`,
+        `Are you sure you want to submit?\n\nName: ${name}\nEmail: ${email}\nContact: ${fullPhone}`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -243,18 +354,42 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
           )}
 
           {renderField('Contact Number', contactError,
-            <TextInput
-              ref={contactInputRef}
-              style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: contactError ? colors.text : colors.border }]}
-              placeholder="+63 123-4567-890"
-              placeholderTextColor={colors.placeholder}
-              value={contactNumber}
-              onChangeText={(text) => { setContactNumber(text); if (contactError) setContactError(''); }}
-              keyboardType="phone-pad"
-              returnKeyType="next"
-              onSubmitEditing={() => whyHireYouInputRef.current?.focus()}
-              onFocus={() => scrollToInput(240)}
-            />
+            <View>
+              {/* Country Picker Button */}
+              <Pressable 
+                onPress={() => setShowCountryPicker(true)}
+                style={[styles.countryButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={styles.countryButtonContent}>
+                  <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
+                  <Text style={[styles.countryButtonText, { color: colors.text }]}>
+                    {selectedCountry.code} {selectedCountry.dialCode}
+                  </Text>
+                </View>
+                <Feather name="chevron-down" size={18} color={colors.text} />
+              </Pressable>
+
+              {/* Phone Number Input */}
+              <TextInput
+                ref={contactInputRef}
+                style={[styles.input, styles.phoneInput, { backgroundColor: colors.surface, color: colors.text, borderColor: contactError ? colors.text : colors.border }]}
+                placeholder={selectedCountry.placeholder}
+                placeholderTextColor={colors.placeholder}
+                value={contactNumber}
+                onChangeText={handleContactChange}
+                keyboardType="phone-pad"
+                returnKeyType="done"
+                onSubmitEditing={() => whyHireYouInputRef.current?.focus()}
+                onFocus={() => scrollToInput(240)}
+              />
+              
+              {/* Helper text */}
+              <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+                {selectedCountry.minLength === selectedCountry.maxLength 
+                  ? `${selectedCountry.minLength} digits required`
+                  : `${selectedCountry.minLength}-${selectedCountry.maxLength} digits required`
+                }
+              </Text>
+            </View>
           )}
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -291,14 +426,70 @@ const ApplicationFormScreen: React.FC<ApplicationFormScreenProps> = ({
             </Pressable>
 
             <Pressable
-              style={({ pressed }) => [styles.cancelBtn, { borderColor: colors.border, opacity: pressed ? 0.6 : 1 }]}
+              style={({ pressed }) => [
+                styles.cancelBtn, 
+                { 
+                  backgroundColor: colors.surface, 
+                  borderColor: colors.border,
+                  opacity: pressed ? 0.6 : 1 
+                }
+              ]}
               onPress={handleCancel}>
-              <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
+              <Text style={[styles.cancelBtnText, { color: colors.text }]}>Cancel</Text>
             </Pressable>
           </View>
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Country Picker Modal */}
+      <Modal
+        visible={showCountryPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCountryPicker(false)}>
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setShowCountryPicker(false)}>
+          <Pressable 
+            style={[styles.modalContent, { backgroundColor: colors.surface }]}
+            onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Select Country</Text>
+              <Pressable onPress={() => setShowCountryPicker(false)}>
+                <Feather name="x" size={24} color={colors.text} />
+              </Pressable>
+            </View>
+            <ScrollView style={styles.countryList}>
+              {COUNTRIES.map((country) => (
+                <TouchableOpacity
+                  key={country.code}
+                  style={[
+                    styles.countryItem,
+                    { borderBottomColor: colors.border },
+                    selectedCountry.code === country.code && { backgroundColor: colors.background }
+                  ]}
+                  onPress={() => handleCountrySelect(country)}>
+                  <View style={styles.countryItemContent}>
+                    <Text style={styles.countryFlag}>{country.flag}</Text>
+                    <View style={styles.countryInfo}>
+                      <Text style={[styles.countryName, { color: colors.text }]}>
+                        {country.name}
+                      </Text>
+                      <Text style={[styles.countryDetails, { color: colors.textSecondary }]}>
+                        {country.code} {country.dialCode} • {country.minLength === country.maxLength ? `${country.minLength} digits` : `${country.minLength}-${country.maxLength} digits`}
+                      </Text>
+                    </View>
+                  </View>
+                  {selectedCountry.code === country.code && (
+                    <Feather name="check" size={20} color={colors.text} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -377,6 +568,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     borderWidth: 1,
   },
+  countryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  countryButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  countryFlag: {
+    fontSize: 24,
+  },
+  countryButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  phoneInput: {
+    marginTop: 0,
+  },
+  helperText: {
+    fontSize: 12,
+    marginTop: 6,
+  },
   textArea: {
     height: 120,
     paddingTop: 14,
@@ -415,7 +635,61 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: 15,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  // MODAL
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 12,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  countryList: {
+    maxHeight: 500,
+  },
+  countryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  countryItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  countryInfo: {
+    flex: 1,
+  },
+  countryName: {
+    fontSize: 16,
     fontWeight: '500',
+    marginBottom: 4,
+  },
+  countryDetails: {
+    fontSize: 13,
   },
 });
 
