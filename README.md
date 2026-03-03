@@ -1,11 +1,36 @@
-# Sample Snack app
+# Job Finder App
+A mobile job search application built with React Native and Expo.
 
-Open the `App.js` file to start writing some code. You can preview the changes directly on your phone or tablet by scanning the **QR code** or use the iOS or Android emulators. When you're done, click **Save** and share the link!
+## Features
+- Browse and search job listings from a live API
+- Save jobs for later review
+- Apply for jobs via an application form
+- Light and dark mode support
 
-When you're ready to see everything that Expo provides (or if you want to use your own editor) you can **Download** your project and use it with [expo cli](https://docs.expo.dev/get-started/installation/#expo-cli)).
+## Screens
+- **Job Finder** — browse and search jobs, save or apply
+- **Saved Jobs** — view and manage your saved jobs
+- **Application Form** — fill out and submit a job application
+- **Settings** — toggle light/dark mode
 
-All projects created in Snack are publicly available, so you can easily share the link to this project via link, or embed it on a web page with the `<>` button.
+## Tech Stack
+- React Native + Expo
+- TypeScript
+- React Navigation (Native Stack)
+- React Context API (theme + saved jobs state)
 
-If you're having problems, you can tweet to us [@expo](https://twitter.com/expo) or ask in our [forums](https://forums.expo.dev/c/expo-dev-tools/61) or [Discord](https://chat.expo.dev/).
+## Project Structure
+```
+src/
+├── components/       # Shared UI components (JobCard, BottomTabBar)
+├── constants/        # Theme colors, country data
+├── context/          # Global state (ThemeContext, SavedJobsContext)
+├── hooks/            # Custom hooks (useJobs)
+├── navigation/       # Stack navigator and route types
+├── screens/          # App screens, each with its own folder
+├── types/            # Shared TypeScript types
+└── utils/            # Utility functions (phone formatting)
+```
 
-Snack is Open Source. You can find the code on the [GitHub repo](https://github.com/expo/snack).
+## API
+Job listings are fetched from [Empllo](https://empllo.com/api/v1).
