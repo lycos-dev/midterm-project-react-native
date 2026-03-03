@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   Pressable,
   FlatList,
-  Alert,
+  Modal,
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
@@ -28,16 +28,16 @@ type Props = {
 const SavedJobsScreen: React.FC<Props> = ({ navigation }) => {
   const { savedJobs, unsaveJob } = useSavedJobs();
   const { colors } = useTheme();
+  const [jobToRemove, setJobToRemove] = useState<Job | null>(null);
 
   const navigateToJobFinder = () => {
     navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'JobFinder' }] }));
   };
 
-  const handleRemoveJob = (job: Job) => {
-    Alert.alert('Remove Job', `Remove "${job.title}" at ${job.company}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => unsaveJob(job.id) },
-    ]);
+  const handleConfirmRemove = () => {
+    if (!jobToRemove) return;
+    unsaveJob(jobToRemove.id);
+    setJobToRemove(null);
   };
 
   const handleApply = () => navigation.navigate('ApplicationForm', { fromScreen: 'SavedJobs' });
@@ -62,7 +62,7 @@ const SavedJobsScreen: React.FC<Props> = ({ navigation }) => {
               styles.actionBtn,
               { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 },
             ]}
-            onPress={() => handleRemoveJob(item)}>
+            onPress={() => setJobToRemove(item)}>
             <Feather name="trash-2" size={13} color={colors.text} />
             <Text style={[styles.actionText, { color: colors.text }]}>Remove</Text>
           </Pressable>
@@ -118,6 +118,40 @@ const SavedJobsScreen: React.FC<Props> = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
           />
         )}
+
+        {/* Remove Confirmation Modal */}
+        <Modal
+          visible={!!jobToRemove}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setJobToRemove(null)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setJobToRemove(null)}>
+            <Pressable style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={(e) => e.stopPropagation()}>
+
+              <View style={[styles.modalIconWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Feather name="trash-2" size={28} color={colors.text} />
+              </View>
+
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Remove this job?</Text>
+              <Text style={[styles.modalJobTitle, { color: colors.text }]} numberOfLines={2}>{jobToRemove?.title}</Text>
+              <Text style={[styles.modalCompany, { color: colors.textSecondary }]} numberOfLines={1}>{jobToRemove?.company}</Text>
+
+              <View style={styles.modalActions}>
+                <Pressable
+                  style={({ pressed }) => [styles.modalBtn, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 }]}
+                  onPress={() => setJobToRemove(null)}>
+                  <Text style={[styles.modalBtnText, { color: colors.text }]}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [styles.modalBtn, styles.modalBtnPrimary, { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }]}
+                  onPress={handleConfirmRemove}>
+                  <Text style={[styles.modalBtnText, { color: colors.surface }]}>Remove</Text>
+                </Pressable>
+              </View>
+
+            </Pressable>
+          </Pressable>
+        </Modal>
 
         <BottomTabBar activeTab="SavedJobs" navigation={navigation} />
       </View>

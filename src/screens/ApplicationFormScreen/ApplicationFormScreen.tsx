@@ -6,7 +6,7 @@ import {
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
-  Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,6 +26,16 @@ type Props = {
   route: RouteProp<RootStackParamList, 'ApplicationForm'>;
 };
 
+type ModalConfig = {
+  icon: keyof typeof Feather.glyphMap;
+  title: string;
+  message: string;
+  confirmLabel: string;
+  cancelLabel?: string;
+  onConfirm: () => void;
+  onCancel?: () => void;
+};
+
 const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,6 +43,7 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
   const [whyHireYou, setWhyHireYou] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<CountryData>(COUNTRIES[0]);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [modal, setModal] = useState<ModalConfig | null>(null);
 
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -98,29 +109,55 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleSubmit = () => {
     if (!validateForm()) {
-      Alert.alert('Validation Error', 'Please fill in all fields correctly.');
+      setModal({
+        icon: 'alert-circle',
+        title: 'Incomplete Form',
+        message: 'Please fill in all fields correctly before submitting.',
+        confirmLabel: 'Got it',
+        onConfirm: () => setModal(null),
+      });
       return;
     }
+
     const fullPhone = `${selectedCountry.dialCode} ${contactNumber}`;
-    Alert.alert('Submit Application', `Are you sure?\n\nName: ${name}\nEmail: ${email}\nContact: ${fullPhone}`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Submit',
-        onPress: () =>
-          Alert.alert('Application Submitted', 'Your application has been submitted successfully!', [
-            { text: 'OK', onPress: () => { clearForm(); goBack(); } },
-          ]),
+    setModal({
+      icon: 'send',
+      title: 'Submit Application?',
+      message: `Name: ${name}\nEmail: ${email}\nContact: ${fullPhone}`,
+      confirmLabel: 'Submit',
+      cancelLabel: 'Cancel',
+      onConfirm: () => {
+        setModal(null);
+        setTimeout(() => {
+          setModal({
+            icon: 'check-circle',
+            title: 'Application Submitted!',
+            message: 'Your application has been submitted successfully. We will get back to you soon!',
+            confirmLabel: 'Done',
+            onConfirm: () => {
+              setModal(null);
+              clearForm();
+              goBack();
+            },
+          });
+        }, 300);
       },
-    ]);
+      onCancel: () => setModal(null),
+    });
   };
 
   const handleCancel = () => {
     const hasInput = name.trim() || email.trim() || contactNumber.trim() || whyHireYou.trim();
     if (hasInput) {
-      Alert.alert('Cancel Application', 'All entered information will be lost.', [
-        { text: 'Keep Editing', style: 'cancel' },
-        { text: 'Cancel & Return', style: 'destructive', onPress: goBack },
-      ]);
+      setModal({
+        icon: 'x-circle',
+        title: 'Discard Changes?',
+        message: 'All entered information will be lost if you go back.',
+        confirmLabel: 'Discard',
+        cancelLabel: 'Keep Editing',
+        onConfirm: () => { setModal(null); goBack(); },
+        onCancel: () => setModal(null),
+      });
     } else {
       goBack();
     }
@@ -265,6 +302,42 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
         onSelect={handleCountrySelect}
         onClose={() => setShowCountryPicker(false)}
       />
+
+      {/* Unified App Modal */}
+      <Modal
+        visible={!!modal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => modal?.onCancel ? modal.onCancel() : modal?.onConfirm()}>
+        <Pressable style={styles.modalOverlay} onPress={() => modal?.onCancel ? modal.onCancel() : null}>
+          <Pressable style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={(e) => e.stopPropagation()}>
+
+            <View style={[styles.modalIconWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Feather name={modal?.icon ?? 'info'} size={28} color={colors.text} />
+            </View>
+
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{modal?.title}</Text>
+            <Text style={[styles.modalMessage, { color: colors.textSecondary }]}>{modal?.message}</Text>
+
+            <View style={styles.modalActions}>
+              {modal?.cancelLabel && (
+                <Pressable
+                  style={({ pressed }) => [styles.modalBtn, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 }]}
+                  onPress={modal.onCancel}>
+                  <Text style={[styles.modalBtnText, { color: colors.text }]}>{modal.cancelLabel}</Text>
+                </Pressable>
+              )}
+              <Pressable
+                style={({ pressed }) => [styles.modalBtn, styles.modalBtnPrimary, { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }]}
+                onPress={modal?.onConfirm}>
+                <Text style={[styles.modalBtnText, { color: colors.surface }]}>{modal?.confirmLabel}</Text>
+              </Pressable>
+            </View>
+
+          </Pressable>
+        </Pressable>
+      </Modal>
+
     </SafeAreaView>
   );
 };
