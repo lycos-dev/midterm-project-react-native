@@ -7,6 +7,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Modal,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -62,6 +63,12 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
     navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: fromScreen }] }));
   };
 
+  const showModal = (config: ModalConfig) => {
+    Keyboard.dismiss();
+    // Small delay so keyboard is fully gone before modal appears
+    setTimeout(() => setModal(config), 100);
+  };
+
   const validateEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
   const handleContactChange = (text: string) => {
@@ -109,7 +116,7 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleSubmit = () => {
     if (!validateForm()) {
-      setModal({
+      showModal({
         icon: 'alert-circle',
         title: 'Incomplete Form',
         message: 'Please fill in all fields correctly before submitting.',
@@ -120,7 +127,7 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     const fullPhone = `${selectedCountry.dialCode} ${contactNumber}`;
-    setModal({
+    showModal({
       icon: 'send',
       title: 'Submit Application?',
       message: `Name: ${name}\nEmail: ${email}\nContact: ${fullPhone}`,
@@ -137,7 +144,6 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
             onConfirm: () => {
               setModal(null);
               clearForm();
-              // Always redirect to Job Finder after submission
               navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'JobFinder' }] }));
             },
           });
@@ -150,7 +156,7 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleCancel = () => {
     const hasInput = name.trim() || email.trim() || contactNumber.trim() || whyHireYou.trim();
     if (hasInput) {
-      setModal({
+      showModal({
         icon: 'x-circle',
         title: 'Discard Changes?',
         message: 'All entered information will be lost if you go back.',
@@ -189,8 +195,19 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.navSpacer} />
       </View>
 
-      <KeyboardAvoidingView behavior="padding" style={[styles.keyboardAvoidingView, { backgroundColor: colors.background }]} keyboardVerticalOffset={0}>
-        <ScrollView ref={scrollViewRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={[styles.keyboardAvoidingView, { backgroundColor: colors.background }]}
+        keyboardVerticalOffset={0}
+        // Disable keyboard avoiding when modal is open so it doesn't fight the keyboard dismiss
+        enabled={!modal}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Personal Information</Text>
 
           {renderField('Full Name', nameError,
@@ -310,7 +327,9 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
         animationType="fade"
         onRequestClose={() => modal?.onCancel ? modal.onCancel() : modal?.onConfirm()}>
         <Pressable style={styles.modalOverlay} onPress={() => modal?.onCancel ? modal.onCancel() : null}>
-          <Pressable style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={(e) => e.stopPropagation()}>
 
             <View style={[styles.modalIconWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Feather name={modal?.icon ?? 'info'} size={28} color={colors.text} />

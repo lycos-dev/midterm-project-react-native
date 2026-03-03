@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import uuid from 'react-native-uuid';
 import { Job } from '../types/Job';
 
-const transformJob = (job: any): Job => {
+const stableIds: string[] = [];
+
+const transformJob = (job: any, stableId: string): Job => {
   const title = job.title || job.job_title || job.position || 'No Title';
   const company = job.companyName || job.company || job.company_name || job.employer || 'Unknown Company';
 
@@ -23,7 +25,7 @@ const transformJob = (job: any): Job => {
   }
 
   return {
-    id: uuid.v4() as string,
+    id: stableId,
     title,
     company,
     salary,
@@ -53,7 +55,13 @@ export const useJobs = () => {
       else if (data.data && Array.isArray(data.data)) jobsArray = data.data;
       else jobsArray = Object.values(data);
 
-      setJobs(jobsArray.map(transformJob));
+      jobsArray.forEach((_, i) => {
+        if (!stableIds[i]) {
+          stableIds[i] = uuid.v4() as string;
+        }
+      });
+
+      setJobs(jobsArray.map((job, i) => transformJob(job, stableIds[i])));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
