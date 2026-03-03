@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,10 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
-  Alert,
   TouchableWithoutFeedback,
   Keyboard,
+  Animated,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,6 +30,11 @@ type Props = {
 
 const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [jobToSave, setJobToSave] = useState<Job | null>(null);
+  const [toastMessage, setToastMessage] = useState('');
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const toastAnimation = useRef<Animated.CompositeAnimation | null>(null);
+
   const { jobs, loading, error, refetch } = useJobs();
   const { saveJob, isJobSaved } = useSavedJobs();
   const { colors } = useTheme();
@@ -37,13 +43,41 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
     ? jobs.filter((j) => j.title.toLowerCase().includes(searchQuery.toLowerCase()))
     : jobs;
 
-  const handleSaveJob = (job: Job) => {
-    if (isJobSaved(job.id)) return;
-    Alert.alert('Save Job', `Save "${job.title}" at ${job.company}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Save', onPress: () => saveJob(job) },
+  const showToast = (message: string) => {
+    // Stop any running animation before starting a new one
+    if (toastAnimation.current) {
+      toastAnimation.current.stop();
+    }
+    toastOpacity.setValue(0);
+    setToastMessage(message);
+
+    toastAnimation.current = Animated.sequence([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.delay(1800),
+      Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
     ]);
+
+    toastAnimation.current.start(() => {
+      toastAnimation.current = null;
+    });
   };
+
+  const handleSavePress = (job: Job) => {
+    if (isJobSaved(job.id)) return;
+    setJobToSave(job);
+  };
+
+  const handleConfirmSave = () => {
+    if (!jobToSave) return;
+    saveJob(jobToSave);
+    const title = jobToSave.title.length > 30
+      ? jobToSave.title.slice(0, 30).trimEnd() + '…'
+      : jobToSave.title;
+    setJobToSave(null);
+    showToast(`"${title}" saved`);
+  };
+
+  const handleCancelSave = () => setJobToSave(null);
 
   const handleApply = () => navigation.navigate('ApplicationForm', { fromScreen: 'JobFinder' });
 
@@ -60,7 +94,7 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
                 styles.actionBtn,
                 { backgroundColor: colors.surface, borderColor: colors.border, opacity: isSaved ? 0.5 : pressed ? 0.5 : 1 },
               ]}
-              onPress={() => handleSaveJob(item)}
+              onPress={() => handleSavePress(item)}
               disabled={isSaved}>
               {isSaved && <Feather name="bookmark" size={13} color={colors.text} />}
               <Text style={[styles.actionText, { color: colors.text }]}>{isSaved ? 'Saved' : 'Save'}</Text>
@@ -151,6 +185,48 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableWithoutFeedback>
 
         {renderContent()}
+
+        {/* Save Confirmation Modal */}
+        <Modal
+          visible={!!jobToSave}
+          transparent
+          animationType="fade"
+          onRequestClose={handleCancelSave}>
+          <Pressable style={styles.modalOverlay} onPress={handleCancelSave}>
+            <Pressable style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={(e) => e.stopPropagation()}>
+
+              <View style={[styles.modalIconWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Feather name="bookmark" size={28} color={colors.text} />
+              </View>
+
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Save this job?</Text>
+              <Text style={[styles.modalJobTitle, { color: colors.text }]} numberOfLines={2}>{jobToSave?.title}</Text>
+              <Text style={[styles.modalCompany, { color: colors.textSecondary }]} numberOfLines={1}>{jobToSave?.company}</Text>
+
+              <View style={styles.modalActions}>
+                <Pressable
+                  style={({ pressed }) => [styles.modalBtn, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 }]}
+                  onPress={handleCancelSave}>
+                  <Text style={[styles.modalBtnText, { color: colors.text }]}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [styles.modalBtn, styles.modalBtnPrimary, { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 }]}
+                  onPress={handleConfirmSave}>
+                  <Text style={[styles.modalBtnText, { color: colors.surface }]}>Save</Text>
+                </Pressable>
+              </View>
+
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* Toast */}
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.toast, { backgroundColor: colors.text, opacity: toastOpacity }]}>
+          <Feather name="bookmark" size={14} color={colors.surface} />
+          <Text style={[styles.toastText, { color: colors.surface }]} numberOfLines={1}>{toastMessage}</Text>
+        </Animated.View>
 
         <BottomTabBar activeTab="JobFinder" navigation={navigation} />
       </View>
