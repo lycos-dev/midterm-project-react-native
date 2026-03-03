@@ -1,5 +1,27 @@
 import { CountryData } from '../constants/countries';
 
+// First digit rules per country
+const VALID_FIRST_DIGITS: Record<string, string[]> = {
+  PH: ['9'],
+  US: ['2','3','4','5','6','7','8','9'],
+  CA: ['2','3','4','5','6','7','8','9'],
+  GB: ['7'],
+  IN: ['6','7','8','9'],
+  AU: ['4'],
+  SG: ['8','9'],
+  JP: ['7','8','9'],
+  KR: ['1'],
+  DE: ['1','2','3','4','5','6','7','8','9'],
+};
+
+export const validateFirstDigit = (contact: string, country: CountryData): boolean => {
+  const digitsOnly = contact.replace(/\D/g, '');
+  if (!digitsOnly) return true;
+  const validStarts = VALID_FIRST_DIGITS[country.code];
+  if (!validStarts) return true;
+  return validStarts.includes(digitsOnly[0]);
+};
+
 export const formatPhoneNumber = (text: string, country: CountryData): string => {
   const digitsOnly = text.replace(/\D/g, '');
   const limited = digitsOnly.slice(0, country.maxLength);
