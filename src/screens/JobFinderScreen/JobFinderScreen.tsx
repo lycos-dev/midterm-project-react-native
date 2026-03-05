@@ -36,7 +36,7 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
   const toastAnimation = useRef<Animated.CompositeAnimation | null>(null);
 
   const { jobs, loading, error, refetch } = useJobs();
-  const { saveJob, isJobSaved } = useSavedJobs();
+  const { saveJob, isJobSaved, isJobApplied } = useSavedJobs();
   const { colors } = useTheme();
 
   const filteredJobs = searchQuery.trim()
@@ -44,7 +44,6 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
     : jobs;
 
   const showToast = (message: string) => {
-    // Stop any running animation before starting a new one
     if (toastAnimation.current) {
       toastAnimation.current.stop();
     }
@@ -79,10 +78,17 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleCancelSave = () => setJobToSave(null);
 
-  const handleApply = () => navigation.navigate('ApplicationForm', { fromScreen: 'JobFinder' });
+  const handleApply = (job: Job) => {
+    navigation.navigate('ApplicationForm', { 
+      fromScreen: 'JobFinder',
+      jobId: job.id 
+    });
+  };
 
   const renderJobItem = ({ item }: { item: Job }) => {
     const isSaved = isJobSaved(item.id);
+    const isApplied = isJobApplied(item.id);
+    
     return (
       <JobCard
         job={item}
@@ -100,13 +106,20 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={[styles.actionText, { color: colors.text }]}>{isSaved ? 'Saved' : 'Save'}</Text>
             </Pressable>
             <Pressable
+              disabled={isApplied}
               style={({ pressed }) => [
                 styles.actionBtn,
                 styles.primaryAction,
-                { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
+                { 
+                  backgroundColor: isApplied ? '#28a745' : colors.text,
+                  opacity: isApplied ? 1 : (pressed ? 0.5 : 1),
+                },
               ]}
-              onPress={handleApply}>
-              <Text style={[styles.actionText, { color: colors.surface }]}>Apply</Text>
+              onPress={() => handleApply(item)}>
+              {isApplied && <Feather name="check-circle" size={13} color="#FFFFFF" />}
+              <Text style={[styles.actionText, { color: isApplied ? '#FFFFFF' : colors.surface }]}>
+                {isApplied ? 'Applied' : 'Apply'}
+              </Text>
             </Pressable>
           </>
         }
@@ -186,7 +199,6 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
 
         {renderContent()}
 
-        {/* Save Confirmation Modal */}
         <Modal
           visible={!!jobToSave}
           transparent
@@ -194,15 +206,12 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
           onRequestClose={handleCancelSave}>
           <Pressable style={styles.modalOverlay} onPress={handleCancelSave}>
             <Pressable style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={(e) => e.stopPropagation()}>
-
               <View style={[styles.modalIconWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Feather name="bookmark" size={28} color={colors.text} />
               </View>
-
               <Text style={[styles.modalTitle, { color: colors.text }]}>Save this job?</Text>
               <Text style={[styles.modalJobTitle, { color: colors.text }]} numberOfLines={2}>{jobToSave?.title}</Text>
               <Text style={[styles.modalCompany, { color: colors.textSecondary }]} numberOfLines={1}>{jobToSave?.company}</Text>
-
               <View style={styles.modalActions}>
                 <Pressable
                   style={({ pressed }) => [styles.modalBtn, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 }]}
@@ -215,12 +224,10 @@ const JobFinderScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={[styles.modalBtnText, { color: colors.surface }]}>Save</Text>
                 </Pressable>
               </View>
-
             </Pressable>
           </Pressable>
         </Modal>
 
-        {/* Toast */}
         <Animated.View
           pointerEvents="none"
           style={[styles.toast, { backgroundColor: colors.text, opacity: toastOpacity }]}>

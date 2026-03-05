@@ -26,7 +26,7 @@ type Props = {
 };
 
 const SavedJobsScreen: React.FC<Props> = ({ navigation }) => {
-  const { savedJobs, unsaveJob } = useSavedJobs();
+  const { savedJobs, unsaveJob, isJobApplied } = useSavedJobs();
   const { colors } = useTheme();
   const [jobToRemove, setJobToRemove] = useState<Job | null>(null);
 
@@ -40,36 +40,52 @@ const SavedJobsScreen: React.FC<Props> = ({ navigation }) => {
     setJobToRemove(null);
   };
 
-  const handleApply = () => navigation.navigate('ApplicationForm', { fromScreen: 'SavedJobs' });
+  const handleApply = (job: Job) => {
+    navigation.navigate('ApplicationForm', { 
+      fromScreen: 'SavedJobs',
+      jobId: job.id 
+    });
+  };
 
-  const renderJobItem = ({ item }: { item: Job }) => (
-    <JobCard
-      job={item}
-      colors={colors}
-      actions={
-        <>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionBtn,
-              styles.primaryAction,
-              { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
-            ]}
-            onPress={handleApply}>
-            <Text style={[styles.actionText, { color: colors.surface }]}>Apply</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionBtn,
-              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 },
-            ]}
-            onPress={() => setJobToRemove(item)}>
-            <Feather name="trash-2" size={13} color={colors.text} />
-            <Text style={[styles.actionText, { color: colors.text }]}>Remove</Text>
-          </Pressable>
-        </>
-      }
-    />
-  );
+  const renderJobItem = ({ item }: { item: Job }) => {
+    const isApplied = isJobApplied(item.id);
+    
+    return (
+      <JobCard
+        job={item}
+        colors={colors}
+        actions={
+          <>
+            <Pressable
+              disabled={isApplied}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                styles.primaryAction,
+                { 
+                  backgroundColor: isApplied ? '#28a745' : colors.text,
+                  opacity: isApplied ? 1 : (pressed ? 0.5 : 1),
+                },
+              ]}
+              onPress={() => handleApply(item)}>
+              {isApplied && <Feather name="check-circle" size={13} color="#FFFFFF" />}
+              <Text style={[styles.actionText, { color: isApplied ? '#FFFFFF' : colors.surface }]}>
+                {isApplied ? 'Applied' : 'Apply'}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionBtn,
+                { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 },
+              ]}
+              onPress={() => setJobToRemove(item)}>
+              <Feather name="trash-2" size={13} color={colors.text} />
+              <Text style={[styles.actionText, { color: colors.text }]}>Remove</Text>
+            </Pressable>
+          </>
+        }
+      />
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -119,7 +135,6 @@ const SavedJobsScreen: React.FC<Props> = ({ navigation }) => {
           />
         )}
 
-        {/* Remove Confirmation Modal */}
         <Modal
           visible={!!jobToRemove}
           transparent
@@ -127,15 +142,12 @@ const SavedJobsScreen: React.FC<Props> = ({ navigation }) => {
           onRequestClose={() => setJobToRemove(null)}>
           <Pressable style={styles.modalOverlay} onPress={() => setJobToRemove(null)}>
             <Pressable style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={(e) => e.stopPropagation()}>
-
               <View style={[styles.modalIconWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Feather name="trash-2" size={28} color={colors.text} />
               </View>
-
               <Text style={[styles.modalTitle, { color: colors.text }]}>Remove this job?</Text>
               <Text style={[styles.modalJobTitle, { color: colors.text }]} numberOfLines={2}>{jobToRemove?.title}</Text>
               <Text style={[styles.modalCompany, { color: colors.textSecondary }]} numberOfLines={1}>{jobToRemove?.company}</Text>
-
               <View style={styles.modalActions}>
                 <Pressable
                   style={({ pressed }) => [styles.modalBtn, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.5 : 1 }]}
@@ -148,7 +160,6 @@ const SavedJobsScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={[styles.modalBtnText, { color: colors.surface }]}>Remove</Text>
                 </Pressable>
               </View>
-
             </Pressable>
           </Pressable>
         </Modal>

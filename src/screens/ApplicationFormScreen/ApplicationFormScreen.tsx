@@ -17,6 +17,7 @@ import { Feather } from "@expo/vector-icons";
 
 import { RootStackParamList } from "../../navigation/types";
 import { useTheme } from "../../context/ThemeContext";
+import { useSavedJobs } from "../../context/SavedJobsContext";
 import { COUNTRIES, CountryData } from "../../constants/countries";
 import {
   formatPhoneNumber,
@@ -63,6 +64,8 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
   const whyHireYouInputRef = useRef<TextInput>(null);
 
   const { colors } = useTheme();
+  const { markAsApplied } = useSavedJobs();
+  const jobId = route.params?.jobId;
   const fromScreen = route.params?.fromScreen || "JobFinder";
 
   const goBack = () => {
@@ -185,6 +188,7 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
             confirmLabel: "Okay",
             onConfirm: () => {
               setModal(null);
+              if (jobId) markAsApplied(jobId);
               clearForm();
               navigation.dispatch(
                 CommonActions.reset({
