@@ -6,7 +6,6 @@ import {
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
-  Modal,
   Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,20 +25,12 @@ import {
 } from "../../utils/phoneUtils";
 import CountryPickerModal from "./CountryPickerModal";
 import { styles } from "./styles";
+import AppModal, { ModalConfig } from "./AppModal";
+import { NameField, EmailField, ContactField, WhyHireField } from "./FormFields";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "ApplicationForm">;
   route: RouteProp<RootStackParamList, "ApplicationForm">;
-};
-
-type ModalConfig = {
-  icon: keyof typeof Feather.glyphMap;
-  title: string;
-  message: string;
-  confirmLabel: string;
-  cancelLabel?: string;
-  onConfirm: () => void;
-  onCancel?: () => void;
 };
 
 const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -79,8 +70,6 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
     // Small delay so keyboard is fully gone before modal appears
     setTimeout(() => setModal(config), 100);
   };
-
-  const validateEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
   const handleContactChange = (text: string) => {
     setContactNumber(formatPhoneNumber(text, selectedCountry));
@@ -232,24 +221,6 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   };
 
-  const renderField = (
-    label: string,
-    error: string,
-    input: React.ReactNode,
-  ) => (
-    <View style={styles.formGroup}>
-      <View style={styles.labelRow}>
-        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
-        {error ? (
-          <Text style={[styles.errorInline, { color: colors.textSecondary }]}>
-            {error}
-          </Text>
-        ) : null}
-      </View>
-      {input}
-    </View>
-  );
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -301,121 +272,38 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
             Personal Information
           </Text>
 
-          {renderField(
-            "Full Name",
-            nameError,
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderColor: nameError ? colors.text : colors.border,
-                },
-              ]}
-              placeholder="John Doe"
-              placeholderTextColor={colors.placeholder}
-              value={name}
-              onChangeText={(t) => {
-                const lettersOnly = t.replace(/[^a-zA-Z\s]/g, "");
-                setName(lettersOnly);
-                if (t !== lettersOnly) {
-                  setNameError("Letters only — no numbers or symbols");
-                } else if (lettersOnly === "") {
-                  setNameError("");
-                } else {
-                  setNameError("");
-                }
-              }}
-              autoCapitalize="words"
-              keyboardType="default"
-              returnKeyType="next"
-              onSubmitEditing={() => emailInputRef.current?.focus()}
-              onFocus={() => scrollToInput(0)}
-            />,
-          )}
+          <NameField
+            colors={colors}
+            name={name}
+            nameError={nameError}
+            setName={setName}
+            setNameError={setNameError}
+            emailInputRef={emailInputRef}
+            scrollToInput={scrollToInput}
+          />
 
-          {renderField(
-            "Email Address",
-            emailError,
-            <TextInput
-              ref={emailInputRef}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderColor: emailError ? colors.text : colors.border,
-                },
-              ]}
-              placeholder="john@example.com"
-              placeholderTextColor={colors.placeholder}
-              value={email}
-              onChangeText={(t) => {
-                setEmail(t);
-                if (emailError) setEmailError("");
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="next"
-              onSubmitEditing={() => contactInputRef.current?.focus()}
-              onFocus={() => scrollToInput(120)}
-            />,
-          )}
+          <EmailField
+            colors={colors}
+            email={email}
+            emailError={emailError}
+            setEmail={setEmail}
+            setEmailError={setEmailError}
+            emailInputRef={emailInputRef}
+            contactInputRef={contactInputRef}
+            scrollToInput={scrollToInput}
+          />
 
-          {renderField(
-            "Contact Number",
-            contactError,
-            <View>
-              <Pressable
-                onPress={() => setShowCountryPicker(true)}
-                style={[
-                  styles.countryButton,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <View style={styles.countryButtonContent}>
-                  <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
-                  <Text
-                    style={[styles.countryButtonText, { color: colors.text }]}
-                  >
-                    {selectedCountry.code} {selectedCountry.dialCode}
-                  </Text>
-                </View>
-                <Feather name="chevron-down" size={18} color={colors.text} />
-              </Pressable>
-              <TextInput
-                ref={contactInputRef}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.surface,
-                    color: colors.text,
-                    borderColor: contactError ? colors.text : colors.border,
-                  },
-                ]}
-                placeholder={selectedCountry.placeholder}
-                placeholderTextColor={colors.placeholder}
-                value={contactNumber}
-                onChangeText={handleContactChange}
-                keyboardType="phone-pad"
-                returnKeyType="done"
-                onSubmitEditing={() => whyHireYouInputRef.current?.focus()}
-                onFocus={() => scrollToInput(240)}
-              />
-              <Text
-                style={[styles.helperText, { color: colors.textSecondary }]}
-              >
-                {selectedCountry.minLength === selectedCountry.maxLength
-                  ? `${selectedCountry.minLength} digits required`
-                  : `${selectedCountry.minLength}-${selectedCountry.maxLength} digits required`}
-              </Text>
-            </View>,
-          )}
+          <ContactField
+            colors={colors}
+            contactNumber={contactNumber}
+            contactError={contactError}
+            selectedCountry={selectedCountry}
+            handleContactChange={handleContactChange}
+            setShowCountryPicker={setShowCountryPicker}
+            contactInputRef={contactInputRef}
+            whyHireYouInputRef={whyHireYouInputRef}
+            scrollToInput={scrollToInput}
+          />
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
@@ -423,54 +311,15 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
             Application Details
           </Text>
 
-          {renderField(
-            "Why should we hire you?",
-            whyHireYouError,
-            <>
-              <TextInput
-                ref={whyHireYouInputRef}
-                style={[
-                  styles.input,
-                  styles.textArea,
-                  {
-                    backgroundColor: colors.surface,
-                    color: colors.text,
-                    borderColor: whyHireYouError ? colors.text : colors.border,
-                  },
-                ]}
-                placeholder="Tell us about your skills and experience..."
-                placeholderTextColor={colors.placeholder}
-                value={whyHireYou}
-                onChangeText={(t) => {
-                  setWhyHireYou(t);
-                  if (t.trim().length > 500) {
-                    setWhyHireYouError("Maximum 500 characters reached");
-                  } else {
-                    setWhyHireYouError("");
-                  }
-                }}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-                onFocus={() => scrollToInput(500)}
-              />
-              <Text
-                style={[
-                  styles.charCount,
-                  {
-                    color:
-                      whyHireYou.length < 20 && whyHireYou.length > 0
-                        ? "#FF3B30"
-                        : whyHireYou.length > 500
-                          ? "#FF3B30"
-                          : colors.textSecondary,
-                  },
-                ]}
-              >
-                {whyHireYou.length} / 500
-              </Text>
-            </>,
-          )}
+          <WhyHireField
+            colors={colors}
+            whyHireYou={whyHireYou}
+            whyHireYouError={whyHireYouError}
+            setWhyHireYou={setWhyHireYou}
+            setWhyHireYouError={setWhyHireYouError}
+            whyHireYouInputRef={whyHireYouInputRef}
+            scrollToInput={scrollToInput}
+          />
 
           <View style={styles.actions}>
             <Pressable
@@ -511,81 +360,7 @@ const ApplicationFormScreen: React.FC<Props> = ({ navigation, route }) => {
         onClose={() => setShowCountryPicker(false)}
       />
 
-      <Modal
-        visible={!!modal}
-        transparent
-        animationType="fade"
-        onRequestClose={() =>
-          modal?.onCancel ? modal.onCancel() : modal?.onConfirm()
-        }
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => (modal?.onCancel ? modal.onCancel() : null)}
-        >
-          <Pressable
-            style={[
-              styles.modalCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View
-              style={[
-                styles.modalIconWrap,
-                { backgroundColor: colors.surface, borderColor: colors.border },
-              ]}
-            >
-              <Feather
-                name={modal?.icon ?? "info"}
-                size={28}
-                color={colors.text}
-              />
-            </View>
-
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              {modal?.title}
-            </Text>
-            <Text
-              style={[styles.modalMessage, { color: colors.textSecondary }]}
-            >
-              {modal?.message}
-            </Text>
-
-            <View style={styles.modalActions}>
-              {modal?.cancelLabel && (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.modalBtn,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                      opacity: pressed ? 0.5 : 1,
-                    },
-                  ]}
-                  onPress={modal.onCancel}
-                >
-                  <Text style={[styles.modalBtnText, { color: colors.text }]}>
-                    {modal.cancelLabel}
-                  </Text>
-                </Pressable>
-              )}
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalBtn,
-                  styles.modalBtnPrimary,
-                  { backgroundColor: colors.text, opacity: pressed ? 0.5 : 1 },
-                ]}
-                onPress={modal?.onConfirm}
-              >
-                <Text style={[styles.modalBtnText, { color: colors.surface }]}>
-                  {modal?.confirmLabel}
-                </Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <AppModal modal={modal} colors={colors} />
     </SafeAreaView>
   );
 };
